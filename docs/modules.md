@@ -1,1 +1,1 @@
-::: hanapy.foo
+::: hanapy.core

@@ -47,9 +47,9 @@ class StateUpdate:
             del state.players[player].cards[self.play.pos]
             state.played_cards.play(self.play.card)
         if self.new_card is not None:
-            # assert player is not None
-            # assert new_card == self.new_card
+            assert player is not None
             new_card = state.deck.draw()
+            assert new_card == self.new_card
             state.players[player].cards.append(new_card)
 
         if state.deck.is_empty():

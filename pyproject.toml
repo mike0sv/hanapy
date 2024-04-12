@@ -85,7 +85,9 @@ ignore = [
     # DoNotAssignLambda
     "E731",
     # Avoid specifying long messages outside the exception class
-    "TRY003"
+    "TRY003",
+    # Use of `assert` detected
+    "S101"
 ]
 
 [tool.ruff.format]
