@@ -1,13 +1,14 @@
-from dataclasses import dataclass
+import msgspec
+
+from hanapy.utils.ser import PolyStruct
 
 
-@dataclass(frozen=True)
-class Color:
-    value: str
+class Color(msgspec.Struct, frozen=True):
+    char: str
+    value: str = ""
 
 
-@dataclass
-class Card:
+class Card(PolyStruct):
     color: Color
     number: int
     clues: int = 0

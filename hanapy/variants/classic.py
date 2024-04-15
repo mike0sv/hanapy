@@ -1,13 +1,19 @@
 import random
-from typing import List
+from typing import Sequence
 
 from hanapy.core.card import Card, Color
+from hanapy.core.config import GameConfig
 from hanapy.core.deck import Deck, DeckGenerator
 from hanapy.core.loop import BaseGame, GameLoop
 from hanapy.core.player import PlayerActor
-from hanapy.core.state import GameConfig
 
-CLASSIC_COLORS = [Color("red"), Color("green"), Color("blue"), Color("yellow"), Color("purple")]
+CLASSIC_COLORS = [
+    Color("r", "red"),
+    Color("g", "green"),
+    Color("b", "blue"),
+    Color("y", "yellow"),
+    Color("p", "purple"),
+]
 
 
 class ClassicDeckGenerator(DeckGenerator):
@@ -24,8 +30,8 @@ class ClassicDeckGenerator(DeckGenerator):
 
 
 class ClassicGame(BaseGame):
-    def __init__(self, players: List[PlayerActor]):
-        self.players = players
+    def __init__(self, players: Sequence[PlayerActor]):
+        self.players = list(players)
 
     def get_loop(self) -> "GameLoop":
         player_num = len(self.players)
@@ -34,5 +40,5 @@ class ClassicGame(BaseGame):
         return GameLoop(
             self.players,
             ClassicDeckGenerator(),
-            GameConfig(3, {2: 5, 3: 5, 4: 4, 5: 3}[player_num], player_num, 8, 5, 5),
+            GameConfig(3, {2: 5, 3: 5, 4: 4, 5: 3}[player_num], player_num, 8, 5, 5, colors=CLASSIC_COLORS),
         )

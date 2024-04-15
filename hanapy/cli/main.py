@@ -1,0 +1,6 @@
+import click
+
+
+@click.command()
+def run():
+    print("Run hanapy")
