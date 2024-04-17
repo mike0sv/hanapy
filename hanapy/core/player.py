@@ -1,17 +1,18 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from msgspec import Struct
+
 from hanapy.core.action import Action, StateUpdate
 from hanapy.core.card import Card
 from hanapy.core.config import PublicGameState
-from hanapy.utils.ser import PolyStruct
 
 
-class PlayerMemo(PolyStruct):
+class PlayerMemo(Struct):
     pass
 
 
-class PlayerView(PolyStruct):
+class PlayerView(Struct):
     name: str
     me: int
     memo: PlayerMemo
@@ -29,7 +30,7 @@ class PlayerActor(ABC):
         raise NotImplementedError
 
 
-class PlayerState(PolyStruct):
+class PlayerState(Struct):
     cards: List[Card]
     memo: PlayerMemo
 

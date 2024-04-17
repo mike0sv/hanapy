@@ -28,7 +28,7 @@ class ServerPlayerActor(PlayerActor):
 
     async def get_next_action(self, view: PlayerView) -> Action:
         # print(self.server.send_event)
-        await self.server.send_event(self.pid, WaitForActionEvent(self.pid, view=view))
+        await self.server.send_event(self.pid, WaitForActionEvent(pid=self.pid, view=view))
         return (await self.wait_for_event_type(ActionEvent)).action
 
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
@@ -41,24 +41,34 @@ class ClientPlayerProxy:
         self.pid = pid
         self.client = client
         self.player = player
+        self.player_num: int = -1
+
+    async def observe(self):
+        observe = await self.client.wait_for_event(ObserveUpdateEvent)
+
+        memo = await self.player.observe_update(observe.view, observe.update)
+        await self.client.send_event(UpdatePlayerMemoEvent(pid=self.pid, memo=memo))
 
     async def run(self, is_host: bool):
         await self.client.connect()
-        await self.client.register(self.pid)
+        self.player_num = await self.client.register(self.pid)
 
         # todo use callback
         if is_host:
             while True:
                 msg = await aioconsole.ainput("Enter 'start'\n")
                 if msg == "start":
-                    await self.client.send_event(StartGameEvent(self.pid))
+                    await self.client.send_event(StartGameEvent(pid=self.pid))
                     break
-
+        current_player = 0
+        max_players = 2  # todo
         logger.debug("running client game proxy loop")
         while True:
+            while current_player != self.player_num:
+                await self.observe()
+                current_player = (current_player + 1) % max_players
             wait = await self.client.wait_for_event(WaitForActionEvent)
             action = await self.player.get_next_action(wait.view)
-            await self.client.send_event(ActionEvent(self.pid, action=action))
-            observe = await self.client.wait_for_event(ObserveUpdateEvent)
-            memo = await self.player.observe_update(observe.view, observe.update)
-            await self.client.send_event(UpdatePlayerMemoEvent(self.pid, memo=memo))
+            await self.client.send_event(ActionEvent(pid=self.pid, action=action))
+            await self.observe()
+            current_player = (current_player + 1) % max_players

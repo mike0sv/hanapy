@@ -41,5 +41,13 @@ class ClassicGame(BaseGame):
         return GameLoop(
             self.players,
             ClassicDeckGenerator(),
-            GameConfig(3, {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_num], player_num, 8, 5, 5, colors=CLASSIC_COLORS),
+            GameConfig(
+                max_lives=3,
+                max_cards={1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_num],
+                players=player_num,
+                max_clues=8,
+                num_colors=5,
+                max_card_number=5,
+                colors=CLASSIC_COLORS,
+            ),
         )

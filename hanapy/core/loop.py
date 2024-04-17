@@ -24,11 +24,16 @@ class GameLoop:
             for _ in range(len(players))
         ]
         self.state = GameState(
-            player_states,
-            deck,
-            0,
+            players=player_states,
+            deck=deck,
+            current_player=0,
             public=PublicGameState(
-                config.max_clues, config.max_lives, PlayedCards(cards={}), DiscardPile(cards=[]), config, len(players)
+                clues_left=config.max_clues,
+                lives_left=config.max_lives,
+                played_cards=PlayedCards(cards={}),
+                discarded_cards=DiscardPile(cards=[]),
+                config=config,
+                turns_left=len(players),
             ),
         )
 

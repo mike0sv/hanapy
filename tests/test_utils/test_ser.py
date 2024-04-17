@@ -38,8 +38,12 @@ def test_dumps_loads():
 
 
 def test_dumps_loads_nested():
+    class ASD:
+        pass
+
     class D(msgspec.Struct):
         a: A
+        # x: ASD
 
     c = C(f1="f1", f3="f3")
     d = D(a=c)
@@ -47,5 +51,16 @@ def test_dumps_loads_nested():
     pd = dumps(d)
     assert json.loads(pd) == {"a": {"__typename__": "c", "f1": "f1", "f3": "f3"}}
 
-    d2 = loads(A, pd)
+    d2 = loads(D, pd)
     assert d2 == d
+
+    class E(A):
+        __typename__: ClassVar = "e"
+        d: D
+
+    e = E(d=d, f1="")
+
+    pe = dumps(e)
+    assert json.loads(pe) == {"__typename__": "e", "d": {"a": {"__typename__": "c", "f1": "f1", "f3": "f3"}}, "f1": ""}
+    e2 = loads(A, pe)
+    assert e2 == e

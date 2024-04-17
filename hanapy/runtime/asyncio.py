@@ -4,7 +4,7 @@ from asyncio import StreamReader, StreamWriter
 from typing import Optional
 
 from hanapy.runtime.base import BufferingHanapyClient, BufferingHanapyServer, HostPortMixin
-from hanapy.runtime.events import Event
+from hanapy.runtime.events import Event, PlayerRegisteredEvent
 from hanapy.runtime.types import PlayerID
 from hanapy.utils.ser import dumps, loads
 
@@ -58,10 +58,11 @@ def get_event_loop():
 
 class AsyncServer(HostPortMixin, BufferingHanapyServer[StreamWriter]):
     _host_pid: PlayerID
+    player_num = 0  # fixme
 
     async def send(self, client: StreamWriter, event: Event):
         data = dumps(event) + b"\n"
-        logger.debug("[server] sending event %s", data)
+        logger.debug("[server] sending event %s", event)
         # logger.debug("[server] sending event %s to %s", dumps(event) + b"\n", client)
         client.write(data)
         # await client.drain()
@@ -72,6 +73,8 @@ class AsyncServer(HostPortMixin, BufferingHanapyServer[StreamWriter]):
         logger.debug("[server] new player connected")
         register_event = loads(Event, await reader.readline())
         self.register_player(register_event.pid, writer)
+        await self.send(writer, PlayerRegisteredEvent(pid=register_event.pid, player_num=self.player_num))
+        self.player_num += 1
 
         async def listen_for_events():
             while True:
@@ -120,7 +123,7 @@ class AsyncClient(HostPortMixin, BufferingHanapyClient):
             logger.debug("[client] waiting for connection")
 
     async def send_event(self, event: Event):
+        logger.debug("[client] sending event %s", event)
         data = dumps(event) + b"\n"
-        logger.debug("[client] sending event %s", data)
         self.writer.write(data)  # type: ignore[union-attr]
         # get_event_loop().create_task(self.writer.drain())

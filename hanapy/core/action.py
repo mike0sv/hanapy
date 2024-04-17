@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, ClassVar, Optional
 
+from msgspec import Struct
+
 from hanapy.core.card import Card, Color
 from hanapy.core.errors import InvalidUpdateError
 from hanapy.utils.ser import PolyStruct
@@ -8,12 +10,12 @@ if TYPE_CHECKING:
     from hanapy.core.state import GameState
 
 
-class ActionResult(PolyStruct):
+class ActionResult(Struct):
     life_lost: bool
     clues_change: int = 0
 
 
-class PlayerPos(PolyStruct):
+class PlayerPos(Struct):
     player: int
     pos: int
 
@@ -22,7 +24,7 @@ class PlayerPosCard(PlayerPos):
     card: Card
 
 
-class StateUpdate(PolyStruct):
+class StateUpdate(Struct):
     lives: int = 0
     clues: int = 0
     discard: Optional[PlayerPosCard] = None
@@ -106,6 +108,7 @@ class PlayAction(Action):
             clues=1 if valid_play and card.clues else 0,
             play=(PlayerPosCard(self.player, self.card, card)),
             new_card=state.deck.peek(),
+            discard=(PlayerPosCard(self.player, self.card, card)) if not valid_play else None,
         )
 
 

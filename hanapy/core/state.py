@@ -1,14 +1,15 @@
 from typing import List
 
+from msgspec import Struct
+
 from hanapy.core.action import PlayerPos
 from hanapy.core.card import Card
 from hanapy.core.config import PublicGameState
 from hanapy.core.deck import Deck
 from hanapy.core.player import PlayerMemo, PlayerState, PlayerView
-from hanapy.utils.ser import PolyStruct
 
 
-class BaseGameState(PolyStruct):
+class BaseGameState(Struct):
     pass
 
 

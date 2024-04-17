@@ -1,4 +1,3 @@
-from pprint import pprint
 from typing import List
 
 from aioconsole import ainput
@@ -6,7 +5,7 @@ from aioconsole import ainput
 from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
 from hanapy.core.card import Card, Color
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
-from hanapy.runtime.console.render import print_discarded_cards, print_played_cards, print_players_cards
+from hanapy.runtime.console.render import print_discarded_cards, print_played_cards, print_players_cards, print_update
 
 
 class ConsolePlayerActor(PlayerActor):
@@ -25,7 +24,8 @@ class ConsolePlayerActor(PlayerActor):
 
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
         # pprint(view.to_dict())
-        pprint(update.to_dict())
+        # pprint(update.to_dict())
+        print_update(update)
         return view.memo
 
     async def parse_action_from_input(self, me: int, max_cards: int, cards: List[List[Card]]) -> Action:

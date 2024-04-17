@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from functools import wraps
 
 from typer import Option, Typer
@@ -11,7 +10,7 @@ from hanapy.runtime.players import ClientPlayerProxy
 
 app = Typer(pretty_exceptions_enable=False)
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 
 def run_async(func):

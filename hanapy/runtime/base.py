@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Generic, List, Optional, Type, TypeVar
 
-from hanapy.runtime.events import Event, RegisterPlayerEvent, StartGameEvent
+from hanapy.runtime.events import Event, PlayerRegisteredEvent, RegisterPlayerEvent, StartGameEvent
 from hanapy.runtime.types import PlayerID
 from hanapy.variants.classic import ClassicGame
 
@@ -67,7 +67,7 @@ class EventBuffer:
         self._buf: List[Event] = []
 
     def add(self, event: Event):
-        logger.debug("event buffered %s", event)
+        # logger.debug("event buffered %s", event)
         self._buf.append(event)
 
     def search_event(self, event_type: Type[ET]) -> Optional[ET]:
@@ -112,13 +112,18 @@ class BufferingHanapyServer(HanapyServer, Generic[CT]):
         logger.debug("[server] waiting for %s event from %s", event_type.__name__, pid)
         while pid not in self.player_buffers:
             await asyncio.sleep(0.1)
-        return await self.player_buffers[pid].wait_for_event(event_type)
+        event = await self.player_buffers[pid].wait_for_event(event_type)
+        logger.debug("[server] got event %s from %s", event, pid)
+        return event
 
 
 class HanapyClient(ABC):
-    async def register(self, pid: PlayerID):
+    me: int
+
+    async def register(self, pid: PlayerID) -> int:
         logger.debug("[client] registering self %s", pid)
-        await self.send_event(RegisterPlayerEvent(pid))
+        await self.send_event(RegisterPlayerEvent(pid=pid))
+        return (await self.wait_for_event(PlayerRegisteredEvent)).player_num
 
     @abstractmethod
     async def send_event(self, event: Event):
@@ -146,7 +151,9 @@ class BufferingHanapyClient(HanapyClient, ABC):
 
     async def wait_for_event(self, event_type: Type[ET]) -> ET:
         logger.debug("[client] waiting for event %s", event_type.__name__)
-        return await self._buf.wait_for_event(event_type)
+        event = await self._buf.wait_for_event(event_type)
+        logger.debug("[client] got event %s from server", event)
+        return event
 
 
 class HostPortMixin:

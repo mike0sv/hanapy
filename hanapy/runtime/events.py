@@ -11,7 +11,7 @@ class Event(PolyStruct):
 
     pid: PlayerID
 
-    def __repr__(self):
+    def __str__(self):
         return f"{self.__class__.__name__}[{self.pid}]"
 
 
@@ -41,6 +41,11 @@ class UpdatePlayerMemoEvent(Event):
 
 class RegisterPlayerEvent(Event):
     __typename__: ClassVar = "register_player"
+
+
+class PlayerRegisteredEvent(Event):
+    __typename__: ClassVar = "player_registerend"
+    player_num: int
 
 
 class StartGameEvent(Event):
