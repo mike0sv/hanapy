@@ -81,7 +81,7 @@ class Action(PolyStruct):
     player: int
 
     def to_update(self, state: "GameState") -> StateUpdate:
-        raise NotImplementedError
+        raise NotImplementedError(self.__class__.__name__)
 
 
 class DiscardAction(Action):

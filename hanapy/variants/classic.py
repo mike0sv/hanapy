@@ -36,9 +36,10 @@ class ClassicGame(BaseGame):
     def get_loop(self) -> "GameLoop":
         player_num = len(self.players)
         if player_num < 2 or player_num > 5:
-            raise ValueError()
+            pass
+            # raise ValueError()
         return GameLoop(
             self.players,
             ClassicDeckGenerator(),
-            GameConfig(3, {2: 5, 3: 5, 4: 4, 5: 3}[player_num], player_num, 8, 5, 5, colors=CLASSIC_COLORS),
+            GameConfig(3, {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_num], player_num, 8, 5, 5, colors=CLASSIC_COLORS),
         )

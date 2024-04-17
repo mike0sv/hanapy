@@ -21,11 +21,11 @@ class PlayerView(PolyStruct):
 
 class PlayerActor(ABC):
     @abstractmethod
-    def get_next_action(self, view: PlayerView) -> Action:
+    async def get_next_action(self, view: PlayerView) -> Action:
         raise NotImplementedError
 
     @abstractmethod
-    def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
+    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
         raise NotImplementedError
 
 

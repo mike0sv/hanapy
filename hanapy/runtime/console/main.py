@@ -1,3 +1,5 @@
+import asyncio
+
 from hanapy.runtime.console.player import ConsolePlayerActor
 from hanapy.variants.classic import ClassicGame
 
@@ -6,7 +8,7 @@ def main():
     players = [ConsolePlayerActor(), ConsolePlayerActor()]
     game = ClassicGame(players)
     loop = game.get_loop()
-    loop.run()
+    asyncio.run(loop.run())
 
 
 if __name__ == "__main__":

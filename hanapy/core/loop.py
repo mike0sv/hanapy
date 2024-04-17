@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from hanapy.core.config import DiscardPile, GameConfig, PlayedCards, PublicGameState
@@ -5,6 +6,8 @@ from hanapy.core.deck import DeckGenerator
 from hanapy.core.errors import InvalidUpdateError
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerState
 from hanapy.core.state import GameState
+
+logger = logging.getLogger(__name__)
 
 
 class BaseGame:
@@ -29,12 +32,12 @@ class GameLoop:
             ),
         )
 
-    def run(self) -> None:
+    async def run(self) -> None:
         while True:
             current_player_actor = self.player_actors[self.state.current_player]
             current_player_view = self.state.get_current_player_view()
             while True:
-                action = current_player_actor.get_next_action(current_player_view)
+                action = await current_player_actor.get_next_action(current_player_view)
                 update = action.to_update(self.state)
                 try:
                     update.validate(self.state)
@@ -44,7 +47,7 @@ class GameLoop:
                     continue
 
             for i, player in enumerate(self.player_actors):
-                player_memo = player.observe_update(self.state.get_player_view(i), update)
+                player_memo = await player.observe_update(self.state.get_player_view(i), update)
                 self.state.update_player_memo(i, player_memo)
 
             update.apply(self.state)

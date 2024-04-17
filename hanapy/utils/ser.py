@@ -30,12 +30,18 @@ class PolyStruct(msgspec.Struct):
         return bool(cls.__dict__.get("__root__"))
 
     def to_dict(self) -> Any:
-        return msgspec.to_builtins(self)
+        data = msgspec.to_builtins(self)
+        data["__typename__"] = self.__typename__
+        return data
 
 
-def dumps(obj: PolyStruct, module=msgspec.json) -> Any:
-    data = msgspec.to_builtins(obj)
-    data["__typename__"] = obj.__typename__
+def encode(value):
+    print("encode", value)
+    return value
+
+
+def dumps(obj: msgspec.Struct, module=msgspec.json) -> Any:
+    data = obj.to_dict() if isinstance(obj, PolyStruct) else msgspec.to_builtins(obj, enc_hook=encode)
     return module.encode(data)
 
 
