@@ -2,8 +2,15 @@ from typing import ClassVar, List
 
 from hanapy.core.action import Action, StateUpdate
 from hanapy.core.player import PlayerMemo, PlayerView
-from hanapy.runtime.types import PlayerID
+from hanapy.types import EventHandler, PlayerID
 from hanapy.utils.ser import PolyStruct
+
+
+async def call_handler(event_handler: EventHandler, event: "Event") -> bool:
+    res = event_handler(event)
+    if not isinstance(res, bool):
+        res = await res
+    return res
 
 
 class Event(PolyStruct):

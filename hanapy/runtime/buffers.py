@@ -5,7 +5,7 @@ from typing import Awaitable, Callable, Dict, Generic, List, Optional, Type, Typ
 
 from hanapy.runtime.base import EventHandlers, HanapyClient, HanapyServer
 from hanapy.runtime.events import Event
-from hanapy.runtime.types import PlayerID
+from hanapy.types import PlayerID
 
 ET = TypeVar("ET", bound=Event)
 

@@ -34,7 +34,7 @@ class GameLoop:
             public=PublicGameState(
                 clues_left=config.max_clues,
                 lives_left=config.max_lives,
-                played_cards=PlayedCards(cards={}),
+                played_cards=PlayedCards(cards={c.char: 0 for c in config.colors}),
                 discarded_cards=DiscardPile(cards=[]),
                 config=config,
                 turns_left=len(players),

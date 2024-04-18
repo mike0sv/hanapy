@@ -6,7 +6,7 @@ from typing import Optional
 from hanapy.runtime.base import HostPortMixin
 from hanapy.runtime.buffers import BufferingHanapyClient, BufferingHanapyServer
 from hanapy.runtime.events import ConnectionLostEvent, Event, MessageEvent, PlayerRegisteredEvent
-from hanapy.runtime.types import PlayerID
+from hanapy.types import PlayerID
 from hanapy.utils.ser import dumps, loads
 
 logger = logging.getLogger(__name__)

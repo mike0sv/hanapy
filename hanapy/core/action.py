@@ -146,10 +146,12 @@ class ClueAction(Action):
     number: Optional[int]
 
     def to_update(self, state: "GameState") -> StateUpdate:
-        return StateUpdate(player=self.player, clues=-1, clue=self, clue_touched=self.get_touched(state))
+        return StateUpdate(
+            player=self.player, clues=-1, clue=self, clue_touched=self.get_touched(state.players[self.to_player].cards)
+        )
 
-    def get_touched(self, state: "GameState") -> ClueTouched:
-        return [i for i, c in enumerate(state.players[self.to_player].cards) if self.touches(c)]
+    def get_touched(self, cards: List[Card]) -> ClueTouched:
+        return [i for i, c in enumerate(cards) if self.touches(c)]
 
     def touches(self, card: Card) -> bool:
         if self.number is not None and card.number == self.number:

@@ -2,5 +2,6 @@
 
 # Known bugs
 
-- hang on invalid update
-  - need to send invalidupdateevent to client and re-ask for action
+- if disconnected on player move, does not exit
+- after deck is empty, memo breaks
+- weird player order if client connects first

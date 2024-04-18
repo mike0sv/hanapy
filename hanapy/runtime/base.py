@@ -1,26 +1,24 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Awaitable, Callable, Dict, List, Type, TypeVar, Union
+from typing import Dict, List, Type, Union
 
 from hanapy.core.loop import GameVariant
-from hanapy.runtime.events import Event, PlayerRegisteredEvent, RegisterPlayerEvent, StartGameEvent
-from hanapy.runtime.types import PlayerID
+from hanapy.runtime.events import (
+    Event,
+    EventHandler,
+    PlayerRegisteredEvent,
+    RegisterPlayerEvent,
+    StartGameEvent,
+    call_handler,
+)
+from hanapy.types import ET, EventHandlers, PlayerID
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 55556
 
-ET = TypeVar("ET", bound=Event)
-EventHandler = Union[Callable[[ET], bool], Callable[[ET], Awaitable[bool]]]
-EventHandlers = Dict[Type[ET], List[EventHandler]]
+
 logger = logging.getLogger(__name__)
-
-
-async def call_handler(event_handler: EventHandler, event: Event) -> bool:
-    res = event_handler(event)
-    if not isinstance(res, bool):
-        res = await res
-    return res
 
 
 class HanapyBase(ABC):

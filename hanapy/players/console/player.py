@@ -5,15 +5,20 @@ from aioconsole import ainput
 from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
 from hanapy.core.card import Card, Color
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
+from hanapy.players.console.event_handlers import CONSOLE_EVENT_HANDLERS
 from hanapy.players.console.render import (
     print_game_end,
     print_invalid_action,
     print_player_view,
     print_update,
 )
+from hanapy.types import EventHandlers
 
 
 class ConsolePlayerActor(PlayerActor):
+    def get_event_handlers(self) -> EventHandlers:
+        return CONSOLE_EVENT_HANDLERS
+
     async def on_game_start(self, view: PlayerView):
         print(f"Game started, it's player {view.state.current_player} turn")
         if view.me != view.state.current_player:

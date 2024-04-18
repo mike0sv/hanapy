@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import msgspec
 
@@ -28,3 +28,31 @@ class Card(msgspec.Struct):
     def to_str(self, touched: bool):
         res = self.color.paint(f"{self.number}{self.color.char}", touched=touched)
         return res
+
+
+class CardInfo(msgspec.Struct):
+    color: Optional[Color]
+    number: Optional[int]
+
+    @classmethod
+    def none(cls):
+        return CardInfo(color=None, number=None)
+
+    def to_str(self):
+        num = str(self.number or "?")
+        if self.color is not None:
+            res = num + self.color.char
+            if self.touched:
+                res = res.upper()
+            return self.color.paint(res, touched=self.touched)
+        res = num + "?"
+        return res
+
+    @property
+    def touched(self):
+        return bool(self.number or self.color)
+
+    def as_card(self) -> Optional[Card]:
+        if self.color is not None and self.number is not None:
+            return Card(color=self.color, number=self.number)
+        return None

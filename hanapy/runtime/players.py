@@ -16,7 +16,7 @@ from hanapy.runtime.events import (
     UpdatePlayerMemoEvent,
     WaitForActionEvent,
 )
-from hanapy.runtime.types import PlayerID
+from hanapy.types import PlayerID
 
 logger = logging.getLogger(__name__)
 

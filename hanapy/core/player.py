@@ -1,31 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import Callable, List, Union
 
 from msgspec import Struct
 
 from hanapy.core.action import Action, ClueAction, ClueTouched, StateUpdate
-from hanapy.core.card import Card, Color
+from hanapy.core.card import Card, CardInfo
 from hanapy.core.config import PublicGameState
-
-
-class CardInfo(Struct):
-    color: Optional[Color]
-    number: Optional[int]
-
-    @classmethod
-    def none(cls):
-        return CardInfo(color=None, number=None)
-
-    def to_str(self):
-        touched = bool(self.number or self.color)
-        num = str(self.number or "?")
-        if self.color is not None:
-            res = num + self.color.char
-            if touched:
-                res = res.upper()
-            return self.color.paint(res, touched=touched)
-        res = num + "?"
-        return res
+from hanapy.types import EventHandlers
 
 
 class CluesInfo(Struct):
@@ -96,6 +77,12 @@ class PlayerActor(ABC):
 
     async def on_invalid_action(self, msg: str):
         return
+
+    def get_event_handlers(self) -> EventHandlers:
+        return {}
+
+
+Bot = Callable[[], PlayerActor]
 
 
 class PlayerState(Struct):
