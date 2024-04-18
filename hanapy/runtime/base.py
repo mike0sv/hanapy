@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Type, TypeVar, Union
+from typing import Awaitable, Callable, Dict, List, Type, TypeVar, Union
 
 from hanapy.core.loop import GameVariant
 from hanapy.runtime.events import Event, PlayerRegisteredEvent, RegisterPlayerEvent, StartGameEvent
@@ -11,9 +11,16 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 55556
 
 ET = TypeVar("ET", bound=Event)
-EventHandler = Callable[[ET], bool]
+EventHandler = Union[Callable[[ET], bool], Callable[[ET], Awaitable[bool]]]
 EventHandlers = Dict[Type[ET], List[EventHandler]]
 logger = logging.getLogger(__name__)
+
+
+async def call_handler(event_handler: EventHandler, event: Event) -> bool:
+    res = event_handler(event)
+    if not isinstance(res, bool):
+        res = await res
+    return res
 
 
 class HanapyBase(ABC):
@@ -36,7 +43,7 @@ class HanapyBase(ABC):
             if isinstance(event, event_type):
                 for handler in handlers:
                     logger.debug(f"Handling {event} with {handler}")
-                    if not handler(event):
+                    if not await call_handler(handler, event):
                         logger.debug(f"Stopped propagating {event}")
                         return
         await self._receive_event(event)

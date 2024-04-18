@@ -29,7 +29,7 @@ def print_players_cards(me: int, max_cards: int, cards: List[List[Card]], memo: 
 def print_played_cards(config: GameConfig, cards: PlayedCards):
     print("played cards")
     for c in config.colors:
-        print(c.paint(f"{c.char}{cards.cards.get(c.char, 0)}"), end=" ")
+        print(c.paint(f"{cards.cards.get(c.char, 0)}{c.char}"), end=" ")
     print()
 
 
@@ -68,3 +68,11 @@ def print_player_view(view: PlayerView):
     print(f"Lives: {view.state.lives_left}, Clues: {view.state.clues_left}, Cards left: {view.state.cards_left}")
     if view.state.cards_left == 0:
         print("Turns left:", view.state.turns_left)
+
+
+def print_game_end(view: PlayerView, is_win: bool):
+    print_player_view(view)
+    if is_win:
+        print("[green]YOU WON")
+    else:
+        print("[red]YOU LOOSE")

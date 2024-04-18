@@ -40,11 +40,11 @@ class GameState(BaseGameState):
 
     @property
     def game_ended(self) -> bool:
-        return (
-            self.public.lives_left < 1
-            or self.public.turns_left < 1
-            or self.public.played_cards.is_complete(self.public.config.num_colors, self.public.config.max_card_number)
-        )
+        return self.public.lives_left < 1 or self.public.turns_left < 1 or self.game_winned
+
+    @property
+    def game_winned(self) -> bool:
+        return self.public.played_cards.is_complete(self.public.config.num_colors, self.public.config.max_card_number)
 
     def next_player(self):
         self.public.current_player += 1

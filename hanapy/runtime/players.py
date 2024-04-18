@@ -8,6 +8,7 @@ from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.runtime.base import ET, HanapyClient, HanapyServer
 from hanapy.runtime.events import (
     ActionEvent,
+    GameEndedEvent,
     GameStartedEvent,
     ObserveUpdateEvent,
     StartGameEvent,
@@ -39,6 +40,9 @@ class ServerPlayerActor(PlayerActor):
         await self.server.send_event(self.pid, ObserveUpdateEvent(pid=self.pid, view=view, update=update))
         return (await self.wait_for_event_type(UpdatePlayerMemoEvent)).memo
 
+    async def on_game_end(self, view: PlayerView, is_win: bool):
+        await self.server.send_event(self.pid, GameEndedEvent(pid=self.pid, view=view, is_win=is_win))
+
 
 class ClientPlayerProxy:
     def __init__(self, pid: PlayerID, client: HanapyClient, player: PlayerActor):
@@ -46,11 +50,17 @@ class ClientPlayerProxy:
         self.client = client
         self.player = player
         self.player_num: int = -1
+        self.running = True
 
     async def observe(self):
         observe = await self.client.wait_for_event(ObserveUpdateEvent)
         memo = await self.player.observe_update(observe.view, observe.update)
         await self.client.send_event(UpdatePlayerMemoEvent(pid=self.pid, memo=memo))
+
+    async def game_ended_handler(self, event: GameEndedEvent) -> bool:
+        await self.player.on_game_end(event.view, event.is_win)
+        self.running = False
+        return True
 
     async def run(self, is_host: bool):
         await self.client.connect()
@@ -66,11 +76,13 @@ class ClientPlayerProxy:
 
         logger.debug("running client game proxy loop")
         game_started_event = await self.client.wait_for_event(GameStartedEvent)
+
+        self.client.add_event_handler(GameEndedEvent, self.game_ended_handler)
         await self.player.on_game_start(game_started_event.view)
         current_player = game_started_event.view.state.current_player
         max_players = game_started_event.view.state.config.players
 
-        while await self.client.is_running():
+        while self.running and await self.client.is_running():
             while current_player != self.player_num:
                 await self.observe()
                 current_player = (current_player + 1) % max_players

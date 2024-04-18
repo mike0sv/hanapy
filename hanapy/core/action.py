@@ -39,7 +39,7 @@ class StateUpdate(Struct):
 
     def apply(self, state: "GameState") -> None:
         state.public.lives_left += self.lives
-        state.public.clues_left += self.clues
+        state.public.clues_left = min(state.public.clues_left + self.clues, state.public.config.max_clues)
         player: Optional[int] = None
         if self.discard is not None:
             player = self.discard.player
@@ -49,9 +49,10 @@ class StateUpdate(Struct):
             state.public.discarded_cards.cards.append(self.discard.card)
         if self.play is not None:
             player = self.play.player
-            del state.players[player].cards[self.play.pos]
-            state.players[player].memo.info.pop_card(self.play.pos)
-            state.memo.pop_card(player, self.play.pos)
+            if not self.discard:
+                del state.players[player].cards[self.play.pos]
+                state.players[player].memo.info.pop_card(self.play.pos)
+                state.memo.pop_card(player, self.play.pos)
             state.public.played_cards.play(self.play.card)
         if self.new_card is not None:
             assert player is not None
@@ -69,7 +70,9 @@ class StateUpdate(Struct):
 
     def validate(self, state: "GameState") -> None:
         new_clues = state.public.clues_left + self.clues
-        if new_clues < 0 or (new_clues > state.public.config.max_clues and not state.public.config.unlimited_clues):
+        if new_clues < 0 or (
+            self.play is None and new_clues > state.public.config.max_clues and not state.public.config.unlimited_clues
+        ):
             raise InvalidUpdateError("clues")
         new_lives = state.public.lives_left + self.lives
         if new_lives < 0 or new_lives > state.public.config.max_lives:

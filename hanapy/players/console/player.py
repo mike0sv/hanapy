@@ -6,6 +6,7 @@ from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, St
 from hanapy.core.card import Card, Color
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.players.console.render import (
+    print_game_end,
     print_player_view,
     print_update,
 )
@@ -19,7 +20,6 @@ class ConsolePlayerActor(PlayerActor):
 
     async def get_next_action(self, view: PlayerView) -> Action:
         print("-" * 20)
-        print("It's your turn\n")
         print_player_view(view)
         action = await self.parse_action_from_input(
             view.me, view.state.config.max_cards, view.cards, view.state.config.colors
@@ -32,9 +32,12 @@ class ConsolePlayerActor(PlayerActor):
         next_player = (update.player + 1) % view.state.config.players
         if next_player != view.me:
             print("-" * 20)
-            print(f"It's player {next_player} turn\n")
             print_player_view(view)
+            print(f"It's player {next_player} turn")
         return view.memo
+
+    async def on_game_end(self, view: PlayerView, is_win: bool):
+        print_game_end(view, is_win)
 
     async def parse_action_from_input(
         self, me: int, max_cards: int, cards: List[List[Card]], colors: List[Color]

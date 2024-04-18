@@ -8,4 +8,5 @@ VARIANTS: Dict[str, GameVariant] = {
     "classic": ClassicGame,
     "smol2x2": SmolGame.variant(2, 2),
     "smol1x2": SmolGame.variant(1, 2),
+    "smol1x1": SmolGame.variant(1, 1),
 }

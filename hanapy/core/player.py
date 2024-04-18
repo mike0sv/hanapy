@@ -87,6 +87,10 @@ class PlayerActor(ABC):
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
         raise NotImplementedError
 
+    @abstractmethod
+    async def on_game_end(self, view: PlayerView, is_win: bool):
+        raise NotImplementedError
+
 
 class PlayerState(Struct):
     cards: List[Card]

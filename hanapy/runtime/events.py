@@ -66,3 +66,9 @@ class ConnectionLostEvent(Event):
 class MessageEvent(Event):
     __typename__: ClassVar = "message"
     text: str
+
+
+class GameEndedEvent(Event):
+    __typename__: ClassVar = "game_ended"
+    view: PlayerView
+    is_win: bool
