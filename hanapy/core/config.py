@@ -44,3 +44,4 @@ class PublicGameState(Struct):
     config: GameConfig
     turns_left: int
     current_player: int
+    cards_left: int

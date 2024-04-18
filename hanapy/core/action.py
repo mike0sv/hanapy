@@ -58,6 +58,7 @@ class StateUpdate(Struct):
             new_card = state.deck.draw()
             assert new_card == self.new_card
             state.players[player].gain_card(new_card)
+            state.public.cards_left -= 1
         if self.clue is not None:
             clued = state.players[self.clue.to_player]
             clued.memo.info.apply_clue(self.clue, self.clue_touched)

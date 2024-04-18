@@ -17,6 +17,9 @@ class Deck:
     def is_empty(self) -> bool:
         return len(self.cards) == 0
 
+    def size(self):
+        return len(self.cards)
+
 
 class DeckGenerator:
     def generate(self) -> Deck:

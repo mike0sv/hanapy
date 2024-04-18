@@ -2,6 +2,7 @@ import asyncio
 import logging
 from functools import wraps
 
+import typer
 from typer import Option, Typer
 
 from hanapy.players.console.event_handlers import CONSOLE_EVENT_HANDLERS
@@ -10,6 +11,7 @@ from hanapy.runtime.asyncio import AsyncClient, AsyncServer
 from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT
 from hanapy.runtime.buffers import EventWaitAborted
 from hanapy.runtime.players import ClientPlayerProxy
+from hanapy.variants import VARIANTS
 
 app = Typer(pretty_exceptions_enable=False)
 
@@ -32,12 +34,16 @@ async def run(
     serve: bool = Option(False),
     host: str = Option(DEFAULT_HOST),
     port: int = Option(DEFAULT_PORT),
+    variant: str = Option("classic"),
     debug: bool = Option(False, "-d"),
 ):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
+    game_variant = VARIANTS.get(variant)
+    if game_variant is None:
+        raise typer.BadParameter(f"No such game variant '{variant}'. Possible values: {list(VARIANTS)}")
     if serve:
-        await AsyncServer(host, port).start(name)
+        await AsyncServer(host, port).start(name, game_variant)
 
     player = ConsolePlayerActor()
     client = AsyncClient(host, port)

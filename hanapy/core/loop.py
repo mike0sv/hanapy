@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import List
+from typing import Callable, List, Sequence
 
 from hanapy.core.config import DiscardPile, GameConfig, PlayedCards, PublicGameState
 from hanapy.core.deck import DeckGenerator
@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 class BaseGame:
     def get_loop(self) -> "GameLoop":
         raise NotImplementedError
+
+
+GameVariant = Callable[[Sequence[PlayerActor]], BaseGame]
 
 
 class GameLoop:
@@ -36,6 +39,7 @@ class GameLoop:
                 config=config,
                 turns_left=len(players),
                 current_player=0,
+                cards_left=deck.size(),
             ),
         )
 

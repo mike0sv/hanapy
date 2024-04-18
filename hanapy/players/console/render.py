@@ -5,7 +5,7 @@ from rich import print
 from hanapy.core.action import StateUpdate
 from hanapy.core.card import Card
 from hanapy.core.config import DiscardPile, GameConfig, PlayedCards
-from hanapy.core.player import PlayerMemo
+from hanapy.core.player import PlayerMemo, PlayerView
 
 
 def print_cards(pos: int, cards: List[Card], touched: List[bool]):
@@ -52,9 +52,19 @@ def print_update(update: StateUpdate):
 
     play = update.play
     if play is not None:
-        print(f"player {play.player} plays {play.card} from {play.pos + 1}")
+        print(f"player {play.player} plays {play.card.to_str(False)} from {play.pos + 1}")
     if update.lives != 0:
         print(f"Lives {update.lives}")
     discard = update.discard
     if discard is not None:
-        print(f"player {discard.player} discards {discard.card} from {discard.pos + 1}")
+        print(f"player {discard.player} discards {discard.card.to_str(False)} from {discard.pos + 1}")
+
+
+def print_player_view(view: PlayerView):
+    print_played_cards(view.state.config, view.state.played_cards)
+    print_discarded_cards(view.state.config, view.state.discarded_cards)
+    print("player cards: ")
+    print_players_cards(view.me, view.state.config.max_cards, view.cards, view.memo, view.common_memo.touched)
+    print(f"Lives: {view.state.lives_left}, Clues: {view.state.clues_left}, Cards left: {view.state.cards_left}")
+    if view.state.cards_left == 0:
+        print("Turns left:", view.state.turns_left)
