@@ -14,7 +14,9 @@ class Color(msgspec.Struct, frozen=True):
         except StopIteration:
             raise ValueError(f"Cannot parse color [{char}]") from None
 
-    def paint(self, text: str):
+    def paint(self, text: str, touched: bool = False):
+        if touched:
+            text = f"[bold]{text.upper()}[/bold]"
         return f"[{self.value}]{text}[/{self.value}]"
 
 
@@ -23,5 +25,6 @@ class Card(msgspec.Struct):
     number: int
     clues: int = 0
 
-    def __repr__(self):
-        return self.color.paint(f"{self.number}{self.color.char}")
+    def to_str(self, touched: bool):
+        res = self.color.paint(f"{self.number}{self.color.char}", touched=touched)
+        return res

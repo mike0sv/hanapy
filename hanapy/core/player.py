@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from msgspec import Struct
 
@@ -17,10 +17,15 @@ class CardInfo(Struct):
         return CardInfo(color=None, number=None)
 
     def to_str(self):
+        touched = bool(self.number or self.color)
         num = str(self.number or "?")
         if self.color is not None:
-            return self.color.paint(num + self.color.char)
-        return num + "?"
+            res = num + self.color.char
+            if touched:
+                res = res.upper()
+            return self.color.paint(res, touched=touched)
+        res = num + "?"
+        return res
 
 
 class CluesInfo(Struct):
@@ -44,10 +49,27 @@ class PlayerMemo(Struct):
         return PlayerMemo(info=CluesInfo(cards=[CardInfo.none() for _ in range(max_cards)]))
 
 
+class CommonMemo(Struct):
+    touched: List[List[bool]]
+
+    @classmethod
+    def create(cls, players: int, max_cards: int):
+        return CommonMemo(touched=[[False for _ in range(max_cards)] for _ in range(players)])
+
+    def touch(self, player: int, card: Union[int, List[int]]):
+        for c in (card,) if isinstance(card, int) else card:
+            self.touched[player][c] = True
+
+    def pop_card(self, player: int, card: int):
+        self.touched[player].pop(card)
+        self.touched[player].insert(0, False)
+
+
 class PlayerView(Struct):
     name: str
     me: int
     memo: PlayerMemo
+    common_memo: CommonMemo
     cards: List[List[Card]]
     state: PublicGameState
 

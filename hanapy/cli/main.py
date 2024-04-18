@@ -4,10 +4,11 @@ from functools import wraps
 
 from typer import Option, Typer
 
+from hanapy.players.console.event_handlers import CONSOLE_EVENT_HANDLERS
+from hanapy.players.console.player import ConsolePlayerActor
 from hanapy.runtime.asyncio import AsyncClient, AsyncServer
-from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT, EventWaitAborted
-from hanapy.runtime.console.event_handlers import CONSOLE_EVENT_HANDLERS
-from hanapy.runtime.console.player import ConsolePlayerActor
+from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT
+from hanapy.runtime.buffers import EventWaitAborted
 from hanapy.runtime.players import ClientPlayerProxy
 
 app = Typer(pretty_exceptions_enable=False)

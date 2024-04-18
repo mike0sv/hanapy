@@ -24,11 +24,11 @@ class ConsolePlayerActor(PlayerActor):
         print("-" * 10)
         return action
 
-    def print_game_view(self, view):
+    def print_game_view(self, view: PlayerView):
         print_played_cards(view.state.config, view.state.played_cards)
         print_discarded_cards(view.state.config, view.state.discarded_cards)
         print("player cards: ")
-        print_players_cards(view.me, view.state.config.max_cards, view.cards, view.memo)
+        print_players_cards(view.me, view.state.config.max_cards, view.cards, view.memo, view.common_memo.touched)
         print(f"Lives: {view.state.lives_left}, Clues: {view.state.clues_left}")
 
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:

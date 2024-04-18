@@ -8,22 +8,22 @@ from hanapy.core.config import DiscardPile, GameConfig, PlayedCards
 from hanapy.core.player import PlayerMemo
 
 
-def print_cards(pos: int, cards: List[Card]):
-    print(f"[{pos}]", " ".join(f"[{c.color.value}]{c.number}{c.color.char}[/{c.color.value}]" for c in cards))
+def print_cards(pos: int, cards: List[Card], touched: List[bool]):
+    print(f"[{pos}]", " ".join(c.to_str(touched[i]) for i, c in enumerate(cards)))
 
 
 def print_my_cards(me: int, memo: PlayerMemo):
     print(f"[{me}]", " ".join(ci.to_str() for ci in memo.info.cards))
 
 
-def print_players_cards(me: int, max_cards: int, cards: List[List[Card]], memo: PlayerMemo):
+def print_players_cards(me: int, max_cards: int, cards: List[List[Card]], memo: PlayerMemo, touched: List[List[bool]]):
     print_my_cards(me, memo)
     players = len(cards)
     for i in range(players):
         pos = (i + me) % players
         if pos == me:
             continue
-        print_cards(pos, cards[pos])
+        print_cards(pos, cards[pos], touched[pos])
 
 
 def print_played_cards(config: GameConfig, cards: PlayedCards):

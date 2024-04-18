@@ -45,11 +45,13 @@ class StateUpdate(Struct):
             player = self.discard.player
             del state.players[player].cards[self.discard.pos]
             state.players[player].memo.info.pop_card(self.discard.pos)
+            state.memo.pop_card(player, self.discard.pos)
             state.public.discarded_cards.cards.append(self.discard.card)
         if self.play is not None:
             player = self.play.player
             del state.players[player].cards[self.play.pos]
             state.players[player].memo.info.pop_card(self.play.pos)
+            state.memo.pop_card(player, self.play.pos)
             state.public.played_cards.play(self.play.card)
         if self.new_card is not None:
             assert player is not None
@@ -59,6 +61,7 @@ class StateUpdate(Struct):
         if self.clue is not None:
             clued = state.players[self.clue.to_player]
             clued.memo.info.apply_clue(self.clue, self.clue_touched)
+            state.memo.touch(self.clue.to_player, self.clue_touched)
 
         if state.deck.is_empty():
             state.public.turns_left -= 1

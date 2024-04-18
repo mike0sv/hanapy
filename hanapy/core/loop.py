@@ -5,7 +5,7 @@ from typing import List
 from hanapy.core.config import DiscardPile, GameConfig, PlayedCards, PublicGameState
 from hanapy.core.deck import DeckGenerator
 from hanapy.core.errors import InvalidUpdateError
-from hanapy.core.player import PlayerActor, PlayerMemo, PlayerState
+from hanapy.core.player import CommonMemo, PlayerActor, PlayerMemo, PlayerState
 from hanapy.core.state import GameState
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ class GameLoop:
         self.state = GameState(
             players=player_states,
             deck=deck,
+            memo=CommonMemo.create(len(players), config.max_cards),
             public=PublicGameState(
                 clues_left=config.max_clues,
                 lives_left=config.max_lives,

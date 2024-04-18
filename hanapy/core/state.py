@@ -6,7 +6,7 @@ from hanapy.core.action import PlayerPos
 from hanapy.core.card import Card
 from hanapy.core.config import PublicGameState
 from hanapy.core.deck import Deck
-from hanapy.core.player import PlayerMemo, PlayerState, PlayerView
+from hanapy.core.player import CommonMemo, PlayerMemo, PlayerState, PlayerView
 
 
 class BaseGameState(Struct):
@@ -17,6 +17,7 @@ class GameState(BaseGameState):
     players: List[PlayerState]
     deck: Deck
     public: PublicGameState
+    memo: CommonMemo
 
     def get_current_player_view(self) -> PlayerView:
         return self.get_player_view(self.public.current_player)
@@ -26,6 +27,7 @@ class GameState(BaseGameState):
             name=f"player {player}",
             me=player,
             memo=self.players[player].memo,
+            common_memo=self.memo,
             cards=[p.cards if i != player else [] for i, p in enumerate(self.players)],
             state=self.public,
         )
