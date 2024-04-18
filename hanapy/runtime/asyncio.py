@@ -76,11 +76,12 @@ class AsyncClient(HostPortMixin, BufferingHanapyClient):
     async def run_loop(self):
         while True:
             try:
-                reader, self.writer = await asyncio.open_connection(self.host, self.port)
+                future = asyncio.open_connection(self.host, self.port)
+                reader, self.writer = await asyncio.wait_for(future, timeout=1)
                 break
-            except ConnectionRefusedError:
+            except (ConnectionRefusedError, asyncio.TimeoutError):
                 await asyncio.sleep(1)
-                logger.debug("connecting...")
+                print("connecting...")
         logger.debug("[client] connected")
 
         async def listen_for_events():
