@@ -8,6 +8,7 @@ from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.runtime.base import ET, HanapyClient, HanapyServer
 from hanapy.runtime.events import (
     ActionEvent,
+    GameStartedEvent,
     ObserveUpdateEvent,
     StartGameEvent,
     UpdatePlayerMemoEvent,
@@ -22,6 +23,9 @@ class ServerPlayerActor(PlayerActor):
     def __init__(self, pid: PlayerID, server: HanapyServer):
         self.pid = pid
         self.server = server
+
+    async def on_game_start(self, view: PlayerView):
+        await self.server.send_event(self.pid, GameStartedEvent(pid=self.pid, view=view))
 
     async def wait_for_event_type(self, event_type: Type[ET]) -> ET:
         return await self.server.wait_for_event(self.pid, event_type)
@@ -45,7 +49,6 @@ class ClientPlayerProxy:
 
     async def observe(self):
         observe = await self.client.wait_for_event(ObserveUpdateEvent)
-
         memo = await self.player.observe_update(observe.view, observe.update)
         await self.client.send_event(UpdatePlayerMemoEvent(pid=self.pid, memo=memo))
 
@@ -60,9 +63,13 @@ class ClientPlayerProxy:
                 if msg == "start":
                     await self.client.send_event(StartGameEvent(pid=self.pid))
                     break
-        current_player = 0
-        max_players = 2  # todo
+
         logger.debug("running client game proxy loop")
+        game_started_event = await self.client.wait_for_event(GameStartedEvent)
+        await self.player.on_game_start(game_started_event.view)
+        current_player = game_started_event.view.state.current_player
+        max_players = game_started_event.view.state.config.players
+
         while True:
             while current_player != self.player_num:
                 await self.observe()

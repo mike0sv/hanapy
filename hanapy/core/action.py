@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, ClassVar, Optional
+from typing import TYPE_CHECKING, ClassVar, List, Optional
 
 from msgspec import Struct
 
@@ -24,6 +24,9 @@ class PlayerPosCard(PlayerPos):
     card: Card
 
 
+ClueTouched = List[int]
+
+
 class StateUpdate(Struct):
     lives: int = 0
     clues: int = 0
@@ -31,6 +34,7 @@ class StateUpdate(Struct):
     play: Optional[PlayerPosCard] = None
     new_card: Optional[Card] = None
     clue: Optional["ClueAction"] = None
+    clue_touched: Optional[ClueTouched] = None
 
     def apply(self, state: "GameState") -> None:
         state.public.lives_left += self.lives
@@ -39,16 +43,21 @@ class StateUpdate(Struct):
         if self.discard is not None:
             player = self.discard.player
             del state.players[player].cards[self.discard.pos]
+            state.players[player].memo.info.pop_card(self.discard.pos)
             state.public.discarded_cards.cards.append(self.discard.card)
         if self.play is not None:
             player = self.play.player
             del state.players[player].cards[self.play.pos]
+            state.players[player].memo.info.pop_card(self.play.pos)
             state.public.played_cards.play(self.play.card)
         if self.new_card is not None:
             assert player is not None
             new_card = state.deck.draw()
             assert new_card == self.new_card
-            state.players[player].cards.append(new_card)
+            state.players[player].gain_card(new_card)
+        if self.clue is not None:
+            clued = state.players[self.clue.to_player]
+            clued.memo.info.apply_clue(self.clue, self.clue_touched)
 
         if state.deck.is_empty():
             state.public.turns_left -= 1
@@ -73,8 +82,11 @@ class StateUpdate(Struct):
         if self.discard is not None and state.card_at(self.discard) != self.discard.card:
             raise InvalidUpdateError("discard")
 
-        if self.clue is not None and self.clue.player == self.clue.to_player:
-            raise InvalidUpdateError("self clue")
+        if self.clue is not None:
+            if self.clue.player == self.clue.to_player:
+                raise InvalidUpdateError("self clue")
+            if self.clue_touched is None or len(self.clue_touched) == 0:
+                raise InvalidUpdateError("empty clue")
             # todo empty/wrong clues
 
 
@@ -120,4 +132,14 @@ class ClueAction(Action):
     number: Optional[int]
 
     def to_update(self, state: "GameState") -> StateUpdate:
-        return StateUpdate(clues=-1, clue=self)
+        return StateUpdate(clues=-1, clue=self, clue_touched=self.get_touched(state))
+
+    def get_touched(self, state: "GameState") -> ClueTouched:
+        return [i for i, c in enumerate(state.players[self.to_player].cards) if self.touches(c)]
+
+    def touches(self, card: Card) -> bool:
+        if self.number is not None and card.number == self.number:
+            return True
+        if self.color is not None and card.color == self.color:
+            return True
+        return False

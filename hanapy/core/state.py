@@ -16,11 +16,10 @@ class BaseGameState(Struct):
 class GameState(BaseGameState):
     players: List[PlayerState]
     deck: Deck
-    current_player: int
     public: PublicGameState
 
     def get_current_player_view(self) -> PlayerView:
-        return self.get_player_view(self.current_player)
+        return self.get_player_view(self.public.current_player)
 
     def get_player_view(self, player: int) -> PlayerView:
         return PlayerView(
@@ -46,5 +45,5 @@ class GameState(BaseGameState):
         )
 
     def next_player(self):
-        self.current_player += 1
-        self.current_player %= self.public.config.players
+        self.public.current_player += 1
+        self.public.current_player %= self.public.config.players

@@ -9,34 +9,46 @@ from hanapy.runtime.console.render import print_discarded_cards, print_played_ca
 
 
 class ConsolePlayerActor(PlayerActor):
+    async def on_game_start(self, view: PlayerView):
+        print(f"Game started, it's player {view.state.current_player} turn")
+        if view.me != view.state.current_player:
+            self.print_game_view(view)
+
     async def get_next_action(self, view: PlayerView) -> Action:
+        self.print_game_view(view)
+        action = await self.parse_action_from_input(
+            view.me, view.state.config.max_cards, view.cards, view.state.config.colors
+        )
+        print("-" * 10)
+        return action
+
+    def print_game_view(self, view):
         print(f"It's {view.name} turn\n")
         print_played_cards(view.state.config, view.state.played_cards)
         print_discarded_cards(view.state.config, view.state.discarded_cards)
         print("player cards: ")
-        print_players_cards(view.me, view.state.config.max_cards, view.cards)
+        print_players_cards(view.me, view.state.config.max_cards, view.cards, view.memo)
         print(f"Lives: {view.state.lives_left}, Clues: {view.state.clues_left}")
-        print(f"Enter action (play/discard 1-{view.state.config.max_cards}/clue player_num num/col)")
-        print("-" * 10)
-        action = await self.parse_action_from_input(view.me, view.state.config.max_cards, view.cards)
-        print("-" * 10)
-        return action
 
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
         # pprint(view.to_dict())
         # pprint(update.to_dict())
         print_update(update)
+        self.print_game_view(view)
         return view.memo
 
-    async def parse_action_from_input(self, me: int, max_cards: int, cards: List[List[Card]]) -> Action:
+    async def parse_action_from_input(
+        self, me: int, max_cards: int, cards: List[List[Card]], colors: List[Color]
+    ) -> Action:
+        text = f"Enter action (play/discard 1-{max_cards}/clue player_num num/col)\n" + "-" * 10 + "\n"
         while True:
-            msg = await ainput()
+            msg = await ainput(text)
             try:
-                return self._parse_msg(msg, me, max_cards, cards)
+                return self._parse_msg(msg, me, max_cards, cards, colors)
             except ValueError as e:
                 print("error:", e.args[0])
 
-    def _parse_msg(self, msg: str, me: int, max_cards: int, cards) -> Action:
+    def _parse_msg(self, msg: str, me: int, max_cards: int, cards, colors: List[Color]) -> Action:
         tokens = msg.split(" ")
         if len(tokens) == 0:
             raise ValueError("no input")
@@ -63,7 +75,7 @@ class ConsolePlayerActor(PlayerActor):
                 number = int(clue)
                 color = None
             except ValueError:
-                color = Color(char=clue)
+                color = Color.parse(char=clue, colors=colors)
                 number = None
             return ClueAction(player=me, to_player=player, color=color, number=number)
         raise ValueError(f"unknown cmd {cmd}")

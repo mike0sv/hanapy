@@ -73,7 +73,10 @@ class AsyncServer(HostPortMixin, BufferingHanapyServer[StreamWriter]):
         logger.debug("[server] new player connected")
         register_event = loads(Event, await reader.readline())
         self.register_player(register_event.pid, writer)
-        await self.send(writer, PlayerRegisteredEvent(pid=register_event.pid, player_num=self.player_num))
+        await self.send(
+            writer,
+            PlayerRegisteredEvent(pid=register_event.pid, player_num=self.player_num, players=self.list_players()),
+        )
         self.player_num += 1
 
         async def listen_for_events():

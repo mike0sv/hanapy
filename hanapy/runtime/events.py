@@ -1,4 +1,4 @@
-from typing import ClassVar
+from typing import ClassVar, List
 
 from hanapy.core.action import Action, StateUpdate
 from hanapy.core.player import PlayerMemo, PlayerView
@@ -44,9 +44,16 @@ class RegisterPlayerEvent(Event):
 
 
 class PlayerRegisteredEvent(Event):
-    __typename__: ClassVar = "player_registerend"
+    __typename__: ClassVar = "player_registered"
     player_num: int
+    players: List[str]
 
 
 class StartGameEvent(Event):
     __typename__: ClassVar = "start_game"
+
+
+class GameStartedEvent(Event):
+    __typename__: ClassVar = "game_started"
+
+    view: PlayerView

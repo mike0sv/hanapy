@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import List
 
@@ -20,13 +21,12 @@ class GameLoop:
         self.player_actors = players
         deck = deck_generator.generate()
         player_states = [
-            PlayerState(cards=[deck.draw() for _ in range(config.max_cards)], memo=PlayerMemo())
+            PlayerState(cards=[deck.draw() for _ in range(config.max_cards)], memo=PlayerMemo.create(config.max_cards))
             for _ in range(len(players))
         ]
         self.state = GameState(
             players=player_states,
             deck=deck,
-            current_player=0,
             public=PublicGameState(
                 clues_left=config.max_clues,
                 lives_left=config.max_lives,
@@ -34,12 +34,18 @@ class GameLoop:
                 discarded_cards=DiscardPile(cards=[]),
                 config=config,
                 turns_left=len(players),
+                current_player=0,
             ),
         )
 
+    def enum_player_views(self):
+        yield from ((p, self.state.get_player_view(i)) for i, p in enumerate(self.player_actors))
+
     async def run(self) -> None:
+        await asyncio.gather(*[player.on_game_start(view) for player, view in self.enum_player_views()])
+
         while True:
-            current_player_actor = self.player_actors[self.state.current_player]
+            current_player_actor = self.player_actors[self.state.public.current_player]
             current_player_view = self.state.get_current_player_view()
             while True:
                 action = await current_player_actor.get_next_action(current_player_view)
@@ -51,9 +57,7 @@ class GameLoop:
                     print(e.args)
                     continue
 
-            for i, player in enumerate(self.player_actors):
-                player_memo = await player.observe_update(self.state.get_player_view(i), update)
-                self.state.update_player_memo(i, player_memo)
+            await asyncio.gather(*[player.observe_update(view, update) for player, view in self.enum_player_views()])
 
             update.apply(self.state)
             self.state.next_player()

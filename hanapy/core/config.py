@@ -43,3 +43,4 @@ class PublicGameState(Struct):
     discarded_cards: DiscardPile
     config: GameConfig
     turns_left: int
+    current_player: int
