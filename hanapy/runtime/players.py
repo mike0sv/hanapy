@@ -70,7 +70,7 @@ class ClientPlayerProxy:
         current_player = game_started_event.view.state.current_player
         max_players = game_started_event.view.state.config.players
 
-        while True:
+        while await self.client.is_running():
             while current_player != self.player_num:
                 await self.observe()
                 current_player = (current_player + 1) % max_players

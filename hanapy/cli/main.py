@@ -1,16 +1,16 @@
 import asyncio
+import logging
 from functools import wraps
 
 from typer import Option, Typer
 
 from hanapy.runtime.asyncio import AsyncClient, AsyncServer
-from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT
+from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT, EventWaitAborted
+from hanapy.runtime.console.event_handlers import CONSOLE_EVENT_HANDLERS
 from hanapy.runtime.console.player import ConsolePlayerActor
 from hanapy.runtime.players import ClientPlayerProxy
 
 app = Typer(pretty_exceptions_enable=False)
-
-# logging.basicConfig(level=logging.DEBUG)
 
 
 def run_async(func):
@@ -31,14 +31,22 @@ async def run(
     serve: bool = Option(False),
     host: str = Option(DEFAULT_HOST),
     port: int = Option(DEFAULT_PORT),
+    debug: bool = Option(False, "-d"),
 ):
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
     if serve:
         await AsyncServer(host, port).start(name)
 
     player = ConsolePlayerActor()
-    client = ClientPlayerProxy(name, AsyncClient(host, port), player)
+    client = AsyncClient(host, port)
+    client.add_event_handlers(CONSOLE_EVENT_HANDLERS)
+    player_proxy = ClientPlayerProxy(name, client, player)
 
-    await client.run(is_host=serve)
+    try:
+        await player_proxy.run(is_host=serve)
+    except EventWaitAborted:
+        print("exiting")
 
 
 def main():

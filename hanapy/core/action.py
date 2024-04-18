@@ -28,6 +28,7 @@ ClueTouched = List[int]
 
 
 class StateUpdate(Struct):
+    player: int
     lives: int = 0
     clues: int = 0
     discard: Optional[PlayerPosCard] = None
@@ -105,7 +106,12 @@ class DiscardAction(Action):
 
     def to_update(self, state: "GameState") -> StateUpdate:
         card = state.players[self.player].cards[self.card]
-        return StateUpdate(clues=1, discard=(PlayerPosCard(self.player, self.card, card)), new_card=state.deck.peek())
+        return StateUpdate(
+            player=self.player,
+            clues=1,
+            discard=(PlayerPosCard(self.player, self.card, card)),
+            new_card=state.deck.peek(),
+        )
 
 
 class PlayAction(Action):
@@ -116,6 +122,7 @@ class PlayAction(Action):
         card = state.players[self.player].cards[self.card]
         valid_play = state.public.played_cards.is_valid_play(card)
         return StateUpdate(
+            player=self.player,
             lives=-1 if not valid_play else 0,
             clues=1 if valid_play and card.clues else 0,
             play=(PlayerPosCard(self.player, self.card, card)),
@@ -132,7 +139,7 @@ class ClueAction(Action):
     number: Optional[int]
 
     def to_update(self, state: "GameState") -> StateUpdate:
-        return StateUpdate(clues=-1, clue=self, clue_touched=self.get_touched(state))
+        return StateUpdate(player=self.player, clues=-1, clue=self, clue_touched=self.get_touched(state))
 
     def get_touched(self, state: "GameState") -> ClueTouched:
         return [i for i, c in enumerate(state.players[self.to_player].cards) if self.touches(c)]

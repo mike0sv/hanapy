@@ -57,9 +57,10 @@ class GameLoop:
                     print(e.args)
                     continue
 
+            update.apply(self.state)
+            # todo: do we send old state or new state or both?
             await asyncio.gather(*[player.observe_update(view, update) for player, view in self.enum_player_views()])
 
-            update.apply(self.state)
             self.state.next_player()
             if self.state.game_ended:
                 break

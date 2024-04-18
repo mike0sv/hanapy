@@ -1,6 +1,6 @@
 import asyncio
 
-from hanapy.runtime.console.player import ConsolePlayerActor
+from hanapy.players.console.player import ConsolePlayerActor
 from hanapy.variants.classic import ClassicGame
 
 

@@ -5,7 +5,7 @@ from aioconsole import ainput
 from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
 from hanapy.core.card import Card, Color
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
-from hanapy.runtime.console.render import print_discarded_cards, print_played_cards, print_players_cards, print_update
+from hanapy.players.console.render import print_discarded_cards, print_played_cards, print_players_cards, print_update
 
 
 class ConsolePlayerActor(PlayerActor):
@@ -15,6 +15,8 @@ class ConsolePlayerActor(PlayerActor):
             self.print_game_view(view)
 
     async def get_next_action(self, view: PlayerView) -> Action:
+        print("-" * 20)
+        print("It's your turn\n")
         self.print_game_view(view)
         action = await self.parse_action_from_input(
             view.me, view.state.config.max_cards, view.cards, view.state.config.colors
@@ -23,7 +25,6 @@ class ConsolePlayerActor(PlayerActor):
         return action
 
     def print_game_view(self, view):
-        print(f"It's {view.name} turn\n")
         print_played_cards(view.state.config, view.state.played_cards)
         print_discarded_cards(view.state.config, view.state.discarded_cards)
         print("player cards: ")
@@ -31,10 +32,12 @@ class ConsolePlayerActor(PlayerActor):
         print(f"Lives: {view.state.lives_left}, Clues: {view.state.clues_left}")
 
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
-        # pprint(view.to_dict())
-        # pprint(update.to_dict())
         print_update(update)
-        self.print_game_view(view)
+        next_player = (update.player + 1) % view.state.config.players
+        if next_player != view.me:
+            print("-" * 20)
+            print(f"It's player {next_player} turn\n")
+            self.print_game_view(view)
         return view.memo
 
     async def parse_action_from_input(

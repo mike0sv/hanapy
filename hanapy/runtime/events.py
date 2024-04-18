@@ -57,3 +57,12 @@ class GameStartedEvent(Event):
     __typename__: ClassVar = "game_started"
 
     view: PlayerView
+
+
+class ConnectionLostEvent(Event):
+    __typename__: ClassVar = "connection_lost"
+
+
+class MessageEvent(Event):
+    __typename__: ClassVar = "message"
+    text: str
