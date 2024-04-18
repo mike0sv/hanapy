@@ -59,9 +59,9 @@ class GameLoop:
                     update.validate(self.state)
                     break
                 except InvalidUpdateError as e:
-                    print(e.args)
+                    await current_player_actor.on_invalid_action(e.args[0])
                     continue
-
+            await current_player_actor.on_valid_action()
             update.apply(self.state)
             # todo: do we send old state or new state or both?
             await asyncio.gather(*[player.observe_update(view, update) for player, view in self.enum_player_views()])

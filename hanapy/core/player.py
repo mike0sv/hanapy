@@ -91,6 +91,12 @@ class PlayerActor(ABC):
     async def on_game_end(self, view: PlayerView, is_win: bool):
         raise NotImplementedError
 
+    async def on_valid_action(self):
+        return
+
+    async def on_invalid_action(self, msg: str):
+        return
+
 
 class PlayerState(Struct):
     cards: List[Card]

@@ -7,6 +7,7 @@ from hanapy.core.card import Card, Color
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.players.console.render import (
     print_game_end,
+    print_invalid_action,
     print_player_view,
     print_update,
 )
@@ -38,6 +39,9 @@ class ConsolePlayerActor(PlayerActor):
 
     async def on_game_end(self, view: PlayerView, is_win: bool):
         print_game_end(view, is_win)
+
+    async def on_invalid_action(self, msg: str):
+        print_invalid_action(msg)
 
     async def parse_action_from_input(
         self, me: int, max_cards: int, cards: List[List[Card]], colors: List[Color]

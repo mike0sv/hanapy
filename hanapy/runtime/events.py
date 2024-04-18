@@ -72,3 +72,10 @@ class GameEndedEvent(Event):
     __typename__: ClassVar = "game_ended"
     view: PlayerView
     is_win: bool
+
+
+class ActionVerificationEvent(Event):
+    __typename__: ClassVar = "action_verification"
+
+    success: bool
+    msg: str

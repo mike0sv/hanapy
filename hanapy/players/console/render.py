@@ -76,3 +76,7 @@ def print_game_end(view: PlayerView, is_win: bool):
         print("[green]YOU WON")
     else:
         print("[red]YOU LOOSE")
+
+
+def print_invalid_action(msg: str):
+    print(f"[red]Invalid action: {msg}")

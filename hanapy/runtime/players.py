@@ -8,6 +8,7 @@ from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.runtime.base import ET, HanapyClient, HanapyServer
 from hanapy.runtime.events import (
     ActionEvent,
+    ActionVerificationEvent,
     GameEndedEvent,
     GameStartedEvent,
     ObserveUpdateEvent,
@@ -32,7 +33,6 @@ class ServerPlayerActor(PlayerActor):
         return await self.server.wait_for_event(self.pid, event_type)
 
     async def get_next_action(self, view: PlayerView) -> Action:
-        # print(self.server.send_event)
         await self.server.send_event(self.pid, WaitForActionEvent(pid=self.pid, view=view))
         return (await self.wait_for_event_type(ActionEvent)).action
 
@@ -42,6 +42,12 @@ class ServerPlayerActor(PlayerActor):
 
     async def on_game_end(self, view: PlayerView, is_win: bool):
         await self.server.send_event(self.pid, GameEndedEvent(pid=self.pid, view=view, is_win=is_win))
+
+    async def on_valid_action(self):
+        await self.server.send_event(self.pid, ActionVerificationEvent(pid=self.pid, success=True, msg=""))
+
+    async def on_invalid_action(self, msg: str):
+        await self.server.send_event(self.pid, ActionVerificationEvent(pid=self.pid, success=False, msg=msg))
 
 
 class ClientPlayerProxy:
@@ -87,7 +93,15 @@ class ClientPlayerProxy:
                 await self.observe()
                 current_player = (current_player + 1) % max_players
             wait = await self.client.wait_for_event(WaitForActionEvent)
-            action = await self.player.get_next_action(wait.view)
-            await self.client.send_event(ActionEvent(pid=self.pid, action=action))
+            success = False
+            while not success:
+                action = await self.player.get_next_action(wait.view)
+                await self.client.send_event(ActionEvent(pid=self.pid, action=action))
+                verification = await self.client.wait_for_event(ActionVerificationEvent)
+                if verification.success:
+                    success = True
+                    await self.player.on_valid_action()
+                else:
+                    await self.player.on_invalid_action(verification.msg)
             await self.observe()
             current_player = (current_player + 1) % max_players
