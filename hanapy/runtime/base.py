@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, List, Type, Union
+from typing import Dict, List, Optional, Type, Union
 
 from hanapy.core.loop import GameVariant
 from hanapy.runtime.events import (
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class HanapyBase(ABC):
-    def __init__(self, event_handlers: EventHandlers = None):
+    def __init__(self, event_handlers: Optional[EventHandlers] = None):
         self.event_handlers = event_handlers or {}
 
     def add_event_handler(self, event_type: Type[ET], handler: EventHandler):

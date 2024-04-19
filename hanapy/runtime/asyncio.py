@@ -51,7 +51,7 @@ class AsyncServer(HostPortMixin, BufferingHanapyServer[StreamWriter]):
                 data = await reader.readline()
                 if not data:
                     listening = False
-                    event = ConnectionLostEvent(pid=pid)
+                    event: Event = ConnectionLostEvent(pid=pid)
                     self.unregister_player(pid)
                 else:
                     event = loads(Event, data)
@@ -89,7 +89,7 @@ class AsyncClient(HostPortMixin, BufferingHanapyClient):
                 data = await reader.readline()
                 if not data:
                     logger.debug("Connection to server lost, exiting loop")
-                    event = ConnectionLostEvent(pid="")
+                    event: Event = ConnectionLostEvent(pid="")
                     self.listening = False
                 else:
                     event = loads(Event, data)

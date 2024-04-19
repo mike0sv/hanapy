@@ -86,12 +86,12 @@ class ClientPlayerProxy:
         self.client.add_event_handler(GameEndedEvent, self.game_ended_handler)
         await self.player.on_game_start(game_started_event.view)
         current_player = game_started_event.view.state.current_player
-        max_players = game_started_event.view.state.config.players
+        player_count = game_started_event.view.config.player_count
 
         while self.running and await self.client.is_running():
             while current_player != self.player_num:
                 await self.observe()
-                current_player = (current_player + 1) % max_players
+                current_player = (current_player + 1) % player_count
             wait = await self.client.wait_for_event(WaitForActionEvent)
             success = False
             while not success:
@@ -104,4 +104,4 @@ class ClientPlayerProxy:
                 else:
                     await self.player.on_invalid_action(verification.msg)
             await self.observe()
-            current_player = (current_player + 1) % max_players
+            current_player = (current_player + 1) % player_count

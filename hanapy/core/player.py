@@ -1,58 +1,31 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List, Union
+from typing import Callable, List
 
 from msgspec import Struct
 
-from hanapy.core.action import Action, ClueAction, ClueTouched, StateUpdate
+from hanapy.core.action import Action, StateUpdate
 from hanapy.core.card import Card, CardInfo
-from hanapy.core.config import PublicGameState
+from hanapy.core.config import GameConfig, GameState
 from hanapy.types import EventHandlers
 
 
-class CluesInfo(Struct):
-    cards: List[CardInfo]
-
-    def pop_card(self, card: int):
-        self.cards.pop(card)
-        self.cards.insert(0, CardInfo.none())
-
-    def apply_clue(self, clue: ClueAction, touched: ClueTouched):
-        for card in touched:
-            self.cards[card].color = self.cards[card].color or clue.color
-            self.cards[card].number = self.cards[card].number or clue.number
-
-
 class PlayerMemo(Struct):
-    info: CluesInfo
-
     @classmethod
-    def create(cls, max_cards: int):
-        return PlayerMemo(info=CluesInfo(cards=[CardInfo.none() for _ in range(max_cards)]))
-
-
-class CommonMemo(Struct):
-    touched: List[List[bool]]
-
-    @classmethod
-    def create(cls, players: int, max_cards: int):
-        return CommonMemo(touched=[[False for _ in range(max_cards)] for _ in range(players)])
-
-    def touch(self, player: int, card: Union[int, List[int]]):
-        for c in (card,) if isinstance(card, int) else card:
-            self.touched[player][c] = True
-
-    def pop_card(self, player: int, card: int):
-        self.touched[player].pop(card)
-        self.touched[player].insert(0, False)
+    def create(cls):
+        return PlayerMemo()
 
 
 class PlayerView(Struct):
     name: str
     me: int
     memo: PlayerMemo
-    common_memo: CommonMemo
     cards: List[List[Card]]
-    state: PublicGameState
+    state: GameState
+    config: GameConfig
+
+    @property
+    def my_cards(self) -> List[CardInfo]:
+        return self.state.clued[self.me]
 
 
 class PlayerActor(ABC):

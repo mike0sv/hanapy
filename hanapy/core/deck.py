@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from hanapy.core.card import Card
+from hanapy.core.config import CardConfig
 
 
 @dataclass
@@ -22,5 +23,5 @@ class Deck:
 
 
 class DeckGenerator:
-    def generate(self) -> Deck:
+    def generate(self, config: CardConfig) -> Deck:
         raise NotImplementedError

@@ -2,11 +2,11 @@ from hanapy.players.dummy import DiscardingPlayer
 from hanapy.variants.classic import ClassicGame
 
 
-def test_classic_game():
+async def test_classic_game():
     players = [DiscardingPlayer(), DiscardingPlayer()]
     game = ClassicGame(players)
     loop = game.get_loop()
-    loop.state.public.config.unlimited_clues = True
-    loop.run()
+    loop.data.config.unlimited_clues = True
+    await loop.run()
 
-    assert loop.state.deck.is_empty()
+    assert loop.data.deck.is_empty()

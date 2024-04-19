@@ -1,5 +1,5 @@
 import json
-from typing import ClassVar
+from typing import ClassVar, Dict
 
 import msgspec
 
@@ -64,3 +64,14 @@ def test_dumps_loads_nested():
     assert json.loads(pe) == {"__typename__": "e", "d": {"a": {"__typename__": "c", "f1": "f1", "f3": "f3"}}, "f1": ""}
     e2 = loads(A, pe)
     assert e2 == e
+
+
+def test_int_keys():
+    class A(PolyStruct):
+        __typename__: ClassVar = "a"
+        a: Dict[int, int]
+
+    a = A(a={1: 1})
+
+    data = dumps(a)
+    assert loads(A, data) == a

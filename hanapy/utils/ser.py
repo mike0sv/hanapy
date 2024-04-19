@@ -101,7 +101,7 @@ def decode(cls: Type, value):
             typename = value.pop("__typename__", None)
             if typename is not None:
                 cls = cls.__class_map__[typename]
-        struct = msgspec.convert(value, type=cls.__struct__, dec_hook=decode)
+        struct = msgspec.convert(value, type=cls.__struct__, str_keys=True, dec_hook=decode)
         return cls(**{f: getattr(struct, f) for f in struct.__struct_fields__ if f != "__typename__"})
     raise NotImplementedError
 

@@ -4,32 +4,32 @@ from msgspec import Struct
 
 from hanapy.core.action import PlayerPos
 from hanapy.core.card import Card
-from hanapy.core.config import PublicGameState
+from hanapy.core.config import GameConfig, GameState
 from hanapy.core.deck import Deck
-from hanapy.core.player import CommonMemo, PlayerMemo, PlayerState, PlayerView
+from hanapy.core.player import PlayerMemo, PlayerState, PlayerView
 
 
-class BaseGameState(Struct):
+class BaseGameData(Struct):
     pass
 
 
-class GameState(BaseGameState):
+class GameData(BaseGameData):
     players: List[PlayerState]
     deck: Deck
-    public: PublicGameState
-    memo: CommonMemo
+    state: GameState
+    config: GameConfig
 
     def get_current_player_view(self) -> PlayerView:
-        return self.get_player_view(self.public.current_player)
+        return self.get_player_view(self.state.current_player)
 
     def get_player_view(self, player: int) -> PlayerView:
         return PlayerView(
             name=f"player {player}",
             me=player,
             memo=self.players[player].memo,
-            common_memo=self.memo,
+            config=self.config,
             cards=[p.cards if i != player else [] for i, p in enumerate(self.players)],
-            state=self.public,
+            state=self.state,
         )
 
     def card_at(self, playerpos: PlayerPos) -> Card:
@@ -40,12 +40,12 @@ class GameState(BaseGameState):
 
     @property
     def game_ended(self) -> bool:
-        return self.public.lives_left < 1 or self.public.turns_left < 1 or self.game_winned
+        return self.state.lives_left < 1 or self.state.turns_left < 1 or self.game_winned
 
     @property
     def game_winned(self) -> bool:
-        return self.public.played_cards.is_complete(self.public.config.num_colors, self.public.config.max_card_number)
+        return self.state.played.is_complete(self.config.cards.color_count, self.config.cards.max_number)
 
     def next_player(self):
-        self.public.current_player += 1
-        self.public.current_player %= self.public.config.players
+        self.state.current_player += 1
+        self.state.current_player %= self.config.player_count

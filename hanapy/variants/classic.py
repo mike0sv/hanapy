@@ -2,7 +2,7 @@ import random
 from typing import Sequence
 
 from hanapy.core.card import Card, Color
-from hanapy.core.config import GameConfig
+from hanapy.core.config import CardConfig, GameConfig
 from hanapy.core.deck import Deck, DeckGenerator
 from hanapy.core.loop import BaseGame, GameLoop
 from hanapy.core.player import PlayerActor
@@ -17,14 +17,12 @@ CLASSIC_COLORS = [
 
 
 class ClassicDeckGenerator(DeckGenerator):
-    def generate(self) -> Deck:
+    def generate(self, config: CardConfig) -> Deck:
         cards = []
-        for col in CLASSIC_COLORS:
-            cards.extend([Card(col, 1)] * 3)
-            cards.extend([Card(col, 2)] * 2)
-            cards.extend([Card(col, 3)] * 2)
-            cards.extend([Card(col, 4)] * 2)
-            cards.extend([Card(col, 5, 1)] * 1)
+        for col in config.colors:
+            for num, count in config.counts.items():
+                cards.extend([Card(col, num)] * count)
+
         random.shuffle(cards)
         return Deck(cards=cards)
 
@@ -33,21 +31,26 @@ class ClassicGame(BaseGame):
     def __init__(self, players: Sequence[PlayerActor]):
         self.players = list(players)
 
+    def get_card_config(self) -> CardConfig:
+        return CardConfig(colors=CLASSIC_COLORS, counts={1: 3, 2: 2, 3: 2, 4: 2, 5: 1})
+
+    def get_hand_size(self, player_count: int):
+        return {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_count]
+
     def get_loop(self) -> "GameLoop":
-        player_num = len(self.players)
-        if player_num < 2 or player_num > 5:
+        player_count = len(self.players)
+        if player_count < 2 or player_count > 5:
             pass
             # raise ValueError()
+        cards = self.get_card_config()
         return GameLoop(
             self.players,
             ClassicDeckGenerator(),
             GameConfig(
                 max_lives=3,
-                max_cards={1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_num],
-                players=player_num,
+                hand_size=self.get_hand_size(player_count),
+                player_count=player_count,
                 max_clues=8,
-                num_colors=5,
-                max_card_number=5,
-                colors=CLASSIC_COLORS,
+                cards=cards,
             ),
         )

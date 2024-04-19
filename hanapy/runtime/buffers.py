@@ -43,7 +43,7 @@ class EventBuffer:
 
 
 class BufferingHanapyServer(HanapyServer, Generic[CT]):
-    def __init__(self, event_handlers: EventHandlers = None):
+    def __init__(self, event_handlers: Optional[EventHandlers] = None):
         super().__init__(event_handlers)
         self.player_buffers: Dict[PlayerID, EventBuffer] = {}
         self.player_clients: Dict[PlayerID, CT] = {}
@@ -88,7 +88,7 @@ class BufferingHanapyServer(HanapyServer, Generic[CT]):
 
 
 class BufferingHanapyClient(HanapyClient, ABC):
-    def __init__(self, event_handlers: EventHandlers = None):
+    def __init__(self, event_handlers: Optional[EventHandlers] = None):
         super().__init__(event_handlers=event_handlers)
         self._buf = EventBuffer()
 
