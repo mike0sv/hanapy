@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, ClassVar, List, Optional
 
 from msgspec import Struct
 
-from hanapy.core.card import Card, Clue
+from hanapy.core.card import Card, CardInfo, Clue
 from hanapy.core.errors import InvalidUpdateError
 from hanapy.utils.ser import PolyStruct
 
@@ -54,13 +54,17 @@ class StateUpdate(Struct):
         if self.discard is not None:
             player = self.discard.player
             del game_data.players[player].cards[self.discard.pos]
-            game_data.state.clued.pop_card(player, self.discard.pos, add_new=new_card_dealed)
+            game_data.state.clued.pop_card(
+                player, self.discard.pos, CardInfo.create(game_data.config.cards) if new_card_dealed else None
+            )
             game_data.state.discarded.cards.append(self.discard.card)
         if self.play is not None:
             player = self.play.player
             if not self.discard:
                 del game_data.players[player].cards[self.play.pos]
-                game_data.state.clued.pop_card(player, self.play.pos, add_new=new_card_dealed)
+                game_data.state.clued.pop_card(
+                    player, self.play.pos, CardInfo.create(game_data.config.cards) if new_card_dealed else None
+                )
             game_data.state.played.play(self.play.card)
         if new_card_dealed:
             assert player is not None
@@ -69,7 +73,7 @@ class StateUpdate(Struct):
             game_data.players[player].gain_card(new_card)
             game_data.state.cards_left -= 1
         if self.clue is not None:
-            game_data.state.clued.touch(self.clue.to_player, self.clue, self.clue.touched)
+            game_data.state.clued.apply_clue(self.clue.to_player, self.clue, self.clue.touched)
 
         if game_data.deck.is_empty():
             game_data.state.turns_left -= 1

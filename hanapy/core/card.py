@@ -1,6 +1,9 @@
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Set
 
 import msgspec
+
+if TYPE_CHECKING:
+    from hanapy.core.config import CardConfig
 
 
 class Color(msgspec.Struct, frozen=True):
@@ -18,6 +21,10 @@ class Color(msgspec.Struct, frozen=True):
         if is_touched:
             text = f"[bold]{text.upper()}[/bold]"
         return f"[{self.value}]{text}[/{self.value}]"
+
+    @property
+    def char_painted(self):
+        return f"[{self.value}]{self.char}[/{self.value}]"
 
 
 class Card(msgspec.Struct):
@@ -51,8 +58,24 @@ class Clue(msgspec.Struct):
 
 
 class CardInfo(msgspec.Struct):
-    color: Optional[Color] = None
-    number: Optional[int] = None
+    colors: Set[Color]
+    numbers: Set[int]
+
+    @property
+    def number(self) -> Optional[int]:
+        if len(self.numbers) == 1:
+            return next(iter(self.numbers))
+        return None
+
+    @property
+    def color(self) -> Optional[Color]:
+        if len(self.colors) == 1:
+            return next(iter(self.colors))
+        return None
+
+    @classmethod
+    def create(cls, card_config: "CardConfig"):
+        return CardInfo(colors=set(card_config.colors), numbers=set(range(1, card_config.max_number + 1)))
 
     def to_str(self):
         num = str(self.number or "?")
@@ -74,8 +97,16 @@ class CardInfo(msgspec.Struct):
         return None
 
     def touch(self, clue: Clue):
-        self.color = self.color or clue.color
-        self.number = self.number or clue.number
+        if clue.number is not None:
+            self.numbers = {clue.number}
+        if clue.color is not None:
+            self.colors = {clue.color}
+
+    def not_touch(self, clue: Clue):
+        if clue.color is not None:
+            self.colors.discard(clue.color)
+        if clue.number is not None:
+            self.numbers.discard(clue.number)
 
 
 class CluedCards(msgspec.Struct):
@@ -85,14 +116,17 @@ class CluedCards(msgspec.Struct):
         return self.cards[item]
 
     @classmethod
-    def create(cls, players: int, max_cards: int):
-        return CluedCards(cards=[[CardInfo() for _ in range(max_cards)] for _ in range(players)])
+    def create(cls, players: int, hand_size: int, card_config: "CardConfig"):
+        return CluedCards(cards=[[CardInfo.create(card_config) for _ in range(hand_size)] for _ in range(players)])
 
-    def touch(self, player: int, clue: Clue, card: Union[int, List[int]]):
-        for c in (card,) if isinstance(card, int) else card:
-            self.cards[player][c].touch(clue)
+    def apply_clue(self, player: int, clue: Clue, touched: List[int]):
+        for i, card_info in enumerate(self.cards[player]):
+            if i in touched:
+                card_info.touch(clue)
+            else:
+                card_info.not_touch(clue)
 
-    def pop_card(self, player: int, card: int, add_new: bool):
+    def pop_card(self, player: int, card: int, new: Optional[CardInfo]):
         self.cards[player].pop(card)
-        if add_new:
-            self.cards[player].insert(0, CardInfo())
+        if new is not None:
+            self.cards[player].insert(0, new)

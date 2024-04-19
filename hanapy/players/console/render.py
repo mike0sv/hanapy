@@ -4,7 +4,7 @@ from rich import print
 
 from hanapy.core.action import StateUpdate
 from hanapy.core.card import Card, CardInfo
-from hanapy.core.config import GameResult
+from hanapy.core.config import CardConfig, GameResult
 from hanapy.core.player import PlayerView
 
 
@@ -18,6 +18,13 @@ def print_my_cards(view: PlayerView):
 
 def print_card_clues(player_num: int, cards: List[CardInfo]):
     print(f"[{player_num}]", " ".join(ci.to_str() for ci in cards))
+
+
+def print_card_clues_detailed(cards: List[CardInfo], config: CardConfig):
+    for i, card in enumerate(cards):
+        numbers = "".join(str(n) for n in card.numbers)
+        colors = "".join(c.char_painted for c in card.colors)
+        print(f"card {i + 1}: {numbers} {colors}")
 
 
 def print_players_cards(view: PlayerView):

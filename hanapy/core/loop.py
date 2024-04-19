@@ -37,7 +37,7 @@ class GameLoop:
             state=GameState(
                 clues_left=config.max_clues,
                 lives_left=config.max_lives,
-                clued=CluedCards.create(player_count, config.hand_size),
+                clued=CluedCards.create(player_count, config.hand_size, config.cards),
                 played=PlayedCards.empty(config.cards.colors),
                 discarded=DiscardPile.new(),
                 turns_left=player_count,

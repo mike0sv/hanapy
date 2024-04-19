@@ -8,7 +8,7 @@ from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction
 from hanapy.core.card import Clue, Color
 from hanapy.core.errors import HanapyError
 from hanapy.core.player import PlayerView
-from hanapy.players.console.render import print_card_clues
+from hanapy.players.console.render import print_card_clues, print_card_clues_detailed, print_player_view
 
 CP = TypeVar("CP")
 
@@ -172,8 +172,32 @@ class ViewCluesCommand(Command[int]):
         return player_num
 
     def execute(self, view: PlayerView, params: int):
-        print_card_clues(params, view.state.clued[params])
+        cards = view.state.clued[params]
+        print_card_clues(params, cards)
+        print_card_clues_detailed(cards, view.config.cards)
 
 
-DEFAULT_COMMANDS: List[Command] = [ClueActionCommand(), PlayActionCommand(), DiscardActionCommand(), ViewCluesCommand()]
+class CleanCommand(Command[bool]):
+    prefix = "clean"
+    arg_count = 0
+    help_msg = "print game state"
+
+    def try_parse(self, cmd: str, view: PlayerView) -> Optional[bool]:
+        match = self.match(cmd)
+        if match is None:
+            return None
+        return True
+
+    def execute(self, view: PlayerView, params: CP):
+        print("-" * 20)
+        print_player_view(view)
+
+
+DEFAULT_COMMANDS: List[Command] = [
+    ClueActionCommand(),
+    PlayActionCommand(),
+    DiscardActionCommand(),
+    ViewCluesCommand(),
+    CleanCommand(),
+]
 DEFAULT_COMMANDS.insert(0, HelpCommand(DEFAULT_COMMANDS))
