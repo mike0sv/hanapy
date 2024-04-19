@@ -4,6 +4,7 @@ from typing import Type
 import aioconsole
 
 from hanapy.core.action import Action, StateUpdate
+from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.runtime.base import ET, HanapyClient, HanapyServer
 from hanapy.runtime.events import (
@@ -40,8 +41,8 @@ class ServerPlayerActor(PlayerActor):
         await self.server.send_event(self.pid, ObserveUpdateEvent(pid=self.pid, view=view, update=update))
         return (await self.wait_for_event_type(UpdatePlayerMemoEvent)).memo
 
-    async def on_game_end(self, view: PlayerView, is_win: bool):
-        await self.server.send_event(self.pid, GameEndedEvent(pid=self.pid, view=view, is_win=is_win))
+    async def on_game_end(self, view: PlayerView, game_result: GameResult):
+        await self.server.send_event(self.pid, GameEndedEvent(pid=self.pid, view=view, game_result=game_result))
 
     async def on_valid_action(self):
         await self.server.send_event(self.pid, ActionVerificationEvent(pid=self.pid, success=True, msg=""))
@@ -64,7 +65,7 @@ class ClientPlayerProxy:
         await self.client.send_event(UpdatePlayerMemoEvent(pid=self.pid, memo=memo))
 
     async def game_ended_handler(self, event: GameEndedEvent) -> bool:
-        await self.player.on_game_end(event.view, event.is_win)
+        await self.player.on_game_end(event.view, event.game_result)
         self.running = False
         return True
 

@@ -2,6 +2,7 @@ from aioconsole import ainput
 
 from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
 from hanapy.core.card import Clue, Color
+from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.players.console.event_handlers import CONSOLE_EVENT_HANDLERS
 from hanapy.players.console.render import (
@@ -38,8 +39,8 @@ class ConsolePlayerActor(PlayerActor):
             print(f"It's player {next_player} turn")
         return view.memo
 
-    async def on_game_end(self, view: PlayerView, is_win: bool):
-        print_game_end(view, is_win)
+    async def on_game_end(self, view: PlayerView, game_result: GameResult):
+        print_game_end(view, game_result)
 
     async def on_invalid_action(self, msg: str):
         print_invalid_action(msg)

@@ -1,6 +1,7 @@
 from typing import ClassVar, List
 
 from hanapy.core.action import Action, StateUpdate
+from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerMemo, PlayerView
 from hanapy.types import EventHandler, PlayerID
 from hanapy.utils.ser import PolyStruct
@@ -78,7 +79,7 @@ class MessageEvent(Event):
 class GameEndedEvent(Event):
     __typename__: ClassVar = "game_ended"
     view: PlayerView
-    is_win: bool
+    game_result: GameResult
 
 
 class ActionVerificationEvent(Event):

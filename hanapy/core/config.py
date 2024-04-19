@@ -41,6 +41,10 @@ class PlayedCards(Struct):
     def is_complete(self, color_count: int, max_card_number: int) -> bool:
         return len(self.cards) == color_count and all(v == max_card_number for v in self.cards.values())
 
+    @property
+    def score(self):
+        return sum(self.cards.values())
+
 
 class DiscardPile(Struct):
     cards: List[Card]
@@ -81,3 +85,9 @@ class GameConfig(Struct):
     max_clues: int
     cards: CardConfig
     unlimited_clues: bool = False
+
+
+class GameResult(Struct):
+    is_win: bool
+    score: int
+    max_score: int

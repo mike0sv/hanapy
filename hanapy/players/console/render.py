@@ -4,6 +4,7 @@ from rich import print
 
 from hanapy.core.action import StateUpdate
 from hanapy.core.card import Card, CardInfo
+from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerView
 
 
@@ -70,12 +71,12 @@ def print_player_view(view: PlayerView):
         print("Turns left:", view.state.turns_left)
 
 
-def print_game_end(view: PlayerView, is_win: bool):
+def print_game_end(view: PlayerView, game_result: GameResult):
     print_player_view(view)
-    if is_win:
+    if game_result.is_win:
         print("[green]YOU WON")
     else:
-        print("[red]YOU LOOSE")
+        print(f"[red]YOU LOOSE {game_result.score}/{game_result.max_score}")
 
 
 def print_invalid_action(msg: str):

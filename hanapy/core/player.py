@@ -5,7 +5,7 @@ from msgspec import Struct
 
 from hanapy.core.action import Action, StateUpdate
 from hanapy.core.card import Card, CardInfo
-from hanapy.core.config import GameConfig, GameState
+from hanapy.core.config import GameConfig, GameResult, GameState
 from hanapy.types import EventHandlers
 
 
@@ -42,7 +42,7 @@ class PlayerActor(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def on_game_end(self, view: PlayerView, is_win: bool):
+    async def on_game_end(self, view: PlayerView, game_result: GameResult):
         raise NotImplementedError
 
     async def on_valid_action(self):

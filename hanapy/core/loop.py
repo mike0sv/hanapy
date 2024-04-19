@@ -73,6 +73,9 @@ class GameLoop:
             self.data.next_player()
             if self.data.game_ended:
                 await asyncio.gather(
-                    *[player.on_game_end(view, self.data.game_winned) for player, view in self.enum_player_views()]
+                    *[
+                        player.on_game_end(view, self.data.get_game_result())
+                        for player, view in self.enum_player_views()
+                    ]
                 )
                 break

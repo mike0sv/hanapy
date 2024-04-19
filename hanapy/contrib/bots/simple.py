@@ -3,6 +3,7 @@ from functools import partial
 
 from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
 from hanapy.core.card import Clue
+from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 from hanapy.players.console.render import print_player_view
 from hanapy.runtime.events import GameStartedEvent, ObserveUpdateEvent
@@ -66,5 +67,5 @@ class SimpleBotPlayer(PlayerActor):
     async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
         return view.memo
 
-    async def on_game_end(self, view: PlayerView, is_win: bool):
+    async def on_game_end(self, view: PlayerView, game_result: GameResult):
         pass

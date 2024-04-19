@@ -4,7 +4,7 @@ from msgspec import Struct
 
 from hanapy.core.action import PlayerPos
 from hanapy.core.card import Card
-from hanapy.core.config import GameConfig, GameState
+from hanapy.core.config import GameConfig, GameResult, GameState
 from hanapy.core.deck import Deck
 from hanapy.core.player import PlayerMemo, PlayerState, PlayerView
 
@@ -45,6 +45,15 @@ class GameData(BaseGameData):
     @property
     def game_winned(self) -> bool:
         return self.state.played.is_complete(self.config.cards.color_count, self.config.cards.max_number)
+
+    def get_game_result(self) -> GameResult:
+        if not self.game_ended:
+            raise ValueError("Game not ended")
+        return GameResult(
+            is_win=self.game_winned,
+            score=self.state.played.score,
+            max_score=self.config.cards.max_number * self.config.cards.color_count,
+        )
 
     def next_player(self):
         self.state.current_player += 1
