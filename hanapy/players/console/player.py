@@ -53,10 +53,10 @@ class ConsolePlayerActor(PlayerActor):
     ) -> Action:
         text = f"Enter action (play/discard 1-{max_cards}/clue player_num num/col)\n" + "-" * 10 + "\n"
         while True:
-            msg = await ainput(text)
             try:
+                msg = await ainput(text)
                 return self._parse_msg(msg, me, max_cards, cards, colors)
-            except ValueError as e:
+            except (ValueError, UnicodeDecodeError) as e:
                 print("error:", e.args[0])
 
     def _parse_msg(self, msg: str, me: int, max_cards: int, cards, colors: List[Color]) -> Action:
