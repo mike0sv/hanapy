@@ -1,9 +1,11 @@
+from typing import Any, List, Optional
+
 from aioconsole import ainput
 
-from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
-from hanapy.core.card import Clue, Color
+from hanapy.core.action import Action, StateUpdate
 from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
+from hanapy.players.console.commands import DEFAULT_COMMANDS, ActionCommand, Command, CommandParseError, match_command
 from hanapy.players.console.event_handlers import CONSOLE_EVENT_HANDLERS
 from hanapy.players.console.render import (
     print_game_end,
@@ -15,6 +17,9 @@ from hanapy.types import EventHandlers
 
 
 class ConsolePlayerActor(PlayerActor):
+    def __init__(self, commands: Optional[List[Command]] = None):
+        self.commands = commands or DEFAULT_COMMANDS
+
     def get_event_handlers(self) -> EventHandlers:
         return CONSOLE_EVENT_HANDLERS
 
@@ -46,43 +51,15 @@ class ConsolePlayerActor(PlayerActor):
         print_invalid_action(msg)
 
     async def parse_action_from_input(self, view: PlayerView) -> Action:
-        hand_size = view.config.hand_size
-        text = f"Enter action (play/discard 1-{hand_size}/clue player_num num/col)\n" + "-" * 10 + "\n"
+        command: Command
+        param: Any
+        text = "Enter action (type `help` for help)\n" + "-" * 10 + "\n"
         while True:
             try:
-                msg = await ainput(text)
-                return self._parse_msg(msg, view)
-            except (ValueError, UnicodeDecodeError) as e:
+                cmd = await ainput(text)
+                command, param = match_command(cmd, view, self.commands)
+                if isinstance(command, ActionCommand):
+                    return command.get_action(view, param)
+                command.execute(view, param)
+            except (CommandParseError, UnicodeDecodeError) as e:
                 print("error:", e.args[0])
-
-    def _parse_msg(self, msg: str, view: PlayerView) -> Action:
-        tokens = msg.split(" ")
-        if len(tokens) == 0:
-            raise ValueError("no input")
-        cmd, *tokens = tokens
-        if cmd == "play":
-            if len(tokens) != 1:
-                raise ValueError("unknown command")
-            num_card = int(tokens[0])
-            if num_card > view.config.hand_size or num_card < 1:
-                raise ValueError("wrong card num")
-            return PlayAction(player=view.me, card=num_card - 1)
-        if cmd == "discard":
-            if len(tokens) != 1:
-                raise ValueError("unknown command")
-            num_card = int(tokens[0])
-            if num_card > view.config.hand_size or num_card < 1:
-                raise ValueError("wrong card num")
-            return DiscardAction(player=view.me, card=num_card - 1)
-        if cmd == "clue":
-            # todo validation
-            player_num, clue = tokens
-            player = int(player_num)
-            try:
-                number = int(clue)
-                color = None
-            except ValueError:
-                color = Color.parse(char=clue, colors=view.config.cards.colors)
-                number = None
-            return ClueAction(player=view.me, clue=Clue(to_player=player, color=color, number=number))
-        raise ValueError(f"unknown cmd {cmd}")

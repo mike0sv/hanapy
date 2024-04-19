@@ -13,7 +13,11 @@ def print_cards(pos: int, cards: List[Card], infos: List[CardInfo]):
 
 
 def print_my_cards(view: PlayerView):
-    print(f"[{view.me}]", " ".join(ci.to_str() for ci in view.state.clued[view.me]))
+    print_card_clues(view.me, view.my_cards)
+
+
+def print_card_clues(player_num: int, cards: List[CardInfo]):
+    print(f"[{player_num}]", " ".join(ci.to_str() for ci in cards))
 
 
 def print_players_cards(view: PlayerView):
