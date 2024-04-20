@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Counter, List, Set
+from typing import Callable, ClassVar, Counter, Dict, List, Set, Type, TypeVar, cast
 
 from msgspec import Struct
 
@@ -7,12 +7,33 @@ from hanapy.core.action import Action, StateUpdate
 from hanapy.core.card import Card, CardInfo
 from hanapy.core.config import GameConfig, GameResult, GameState
 from hanapy.types import EventHandlers, SeenCards
+from hanapy.utils.ser import PolyStruct
+
+
+class MemoCell(PolyStruct):
+    __typename__: ClassVar = "memo_cell"
+    __root__: ClassVar = True
+
+    def __init_subclass__(cls):
+        cls.__typename__ = f"{cls.__module__}.{cls.__name__}"
+        super().__init_subclass__()
+
+
+CT = TypeVar("CT", bound=MemoCell)
 
 
 class PlayerMemo(Struct):
+    cells: Dict[str, MemoCell]
+
     @classmethod
     def create(cls):
-        return PlayerMemo()
+        return PlayerMemo(cells={})
+
+    def get(self, cell_type: Type[CT]) -> CT:
+        return cast(CT, self.cells[cell_type.__typename__])
+
+    def add(self, cell: MemoCell):
+        self.cells[cell.__typename__] = cell
 
 
 class PlayerView(Struct):
@@ -62,7 +83,7 @@ class PlayerActor(ABC):
         self.name = name
 
     @abstractmethod
-    async def on_game_start(self, view: PlayerView):
+    async def on_game_start(self, view: PlayerView) -> PlayerMemo:
         raise NotImplementedError
 
     @abstractmethod

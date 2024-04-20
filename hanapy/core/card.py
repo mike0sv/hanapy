@@ -64,6 +64,7 @@ class Clue(msgspec.Struct):
 class CardInfo(msgspec.Struct):
     colors: Set[Color]
     numbers: Set[int]
+    is_touched: bool
 
     @property
     def number(self) -> Optional[int]:
@@ -83,7 +84,9 @@ class CardInfo(msgspec.Struct):
 
     @classmethod
     def create(cls, card_config: "CardConfig"):
-        return CardInfo(colors=set(card_config.colors), numbers=set(range(1, card_config.max_number + 1)))
+        return CardInfo(
+            colors=set(card_config.colors), numbers=set(range(1, card_config.max_number + 1)), is_touched=False
+        )
 
     def to_str(self):
         num = str(self.number or "?")
@@ -94,10 +97,6 @@ class CardInfo(msgspec.Struct):
             return self.color.paint(res, is_touched=self.is_touched)
         res = num + "?"
         return res
-
-    @property
-    def is_touched(self):
-        return bool(self.number or self.color)
 
     @overload
     def as_card(self, force: Literal[True] = True) -> Card: ...
@@ -117,6 +116,7 @@ class CardInfo(msgspec.Struct):
             self.numbers = {clue.number}
         if clue.color is not None:
             self.colors = {clue.color}
+        self.is_touched = True
 
     def not_touch(self, clue: Clue):
         if clue.color is not None:

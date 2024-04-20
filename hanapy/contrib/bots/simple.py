@@ -1,36 +1,18 @@
 import logging
 from functools import partial
 
-from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction, StateUpdate
+from hanapy.contrib.bots.base import BaseBotPlayer
+from hanapy.core.action import Action, ClueAction, DiscardAction, PlayAction
 from hanapy.core.card import Clue
-from hanapy.core.config import GameResult
-from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
-from hanapy.players.console.render import print_player_view
-from hanapy.runtime.events import GameStartedEvent, ObserveUpdateEvent
-from hanapy.types import EventHandlers
+from hanapy.core.player import PlayerView
 
 logger = logging.getLogger(__name__)
 
 
-class SimpleBotPlayer(PlayerActor):
-    def __init__(self, name: str, log: bool = False):
-        super().__init__(name)
-        self.log = log
-
+class SimpleBotPlayer(BaseBotPlayer):
     @classmethod
     def bot(cls, log: bool):
         return partial(SimpleBotPlayer, log=log)
-
-    def get_event_handlers(self) -> EventHandlers:
-        if self.log:
-            return {
-                ObserveUpdateEvent: [lambda event: print_player_view(event.view, detailed=True) or True],
-                GameStartedEvent: [lambda event: print_player_view(event.view) or True],
-            }
-        return {}
-
-    async def on_game_start(self, view: PlayerView):
-        pass
 
     async def get_next_action(self, view: PlayerView) -> Action:  # noqa: C901
         can_discard = view.state.clues_left < view.config.max_clues
@@ -64,9 +46,3 @@ class SimpleBotPlayer(PlayerActor):
                     card_index = i
             return DiscardAction(player=view.me, card=card_index)
         return PlayAction(player=view.me, card=1)
-
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
-        return view.memo
-
-    async def on_game_end(self, view: PlayerView, game_result: GameResult):
-        pass

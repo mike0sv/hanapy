@@ -29,6 +29,7 @@ class PlayedCards(Struct):
         as_card = card.as_card()
         if as_card is not None:
             return self.is_obsolete(as_card, max_number)
+        # todo improve logic
         if card.number is not None:
             return all(card.number <= val for val in self.cards.values())
         if card.color is not None:

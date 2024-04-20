@@ -24,10 +24,11 @@ class ConsolePlayerActor(PlayerActor):
     def get_event_handlers(self) -> EventHandlers:
         return CONSOLE_EVENT_HANDLERS
 
-    async def on_game_start(self, view: PlayerView):
+    async def on_game_start(self, view: PlayerView) -> PlayerMemo:
         print(f"Game started, it's player {view.state.current_player} turn")
         if view.me != view.state.current_player:
             print_player_view(view)
+        return view.memo
 
     async def get_next_action(self, view: PlayerView) -> Action:
         print("-" * 20)

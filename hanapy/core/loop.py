@@ -53,7 +53,9 @@ class GameLoop:
         yield from ((p, self.data.get_player_view(i)) for i, p in enumerate(self.player_actors))
 
     async def run(self) -> None:
-        await asyncio.gather(*[player.on_game_start(view) for player, view in self.enum_player_views()])
+        memos = await asyncio.gather(*[player.on_game_start(view) for player, view in self.enum_player_views()])
+        for player, memo in enumerate(memos):
+            self.data.update_player_memo(player, memo)
 
         while True:
             current_player_actor = self.player_actors[self.data.state.current_player]

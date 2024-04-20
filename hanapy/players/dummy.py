@@ -4,8 +4,8 @@ from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
 
 
 class DiscardingPlayer(PlayerActor):
-    async def on_game_start(self, view: PlayerView):
-        pass
+    async def on_game_start(self, view: PlayerView) -> PlayerMemo:
+        return view.memo
 
     async def on_game_end(self, view: PlayerView, game_result: GameResult):
         pass

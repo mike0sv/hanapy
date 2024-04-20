@@ -67,6 +67,11 @@ class GameStartedEvent(Event):
     view: PlayerView
 
 
+class MemoInitEvent(Event):
+    __typename__: ClassVar = "memo_init"
+    memo: PlayerMemo
+
+
 class ConnectionLostEvent(Event):
     __typename__: ClassVar = "connection_lost"
 

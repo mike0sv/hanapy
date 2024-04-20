@@ -3,6 +3,7 @@ from typing import ClassVar, Dict
 
 import msgspec
 
+from hanapy.core.player import MemoCell
 from hanapy.utils.ser import PolyStruct, dumps, loads
 
 
@@ -75,3 +76,14 @@ def test_int_keys():
 
     data = dumps(a)
     assert loads(A, data) == a
+
+
+def test_ser_memo_cell():
+    class MyMemoCell(MemoCell):
+        field: str
+
+    cell = MyMemoCell(field="asd")
+
+    data = dumps(cell)
+    assert json.loads(data) == {"__typename__": f"{MyMemoCell.__module__}.{MyMemoCell.__name__}", "field": "asd"}
+    assert loads(MemoCell, data) == cell

@@ -12,6 +12,7 @@ from hanapy.runtime.events import (
     ActionVerificationEvent,
     GameEndedEvent,
     GameStartedEvent,
+    MemoInitEvent,
     ObserveUpdateEvent,
     StartGameEvent,
     UpdatePlayerMemoEvent,
@@ -28,8 +29,9 @@ class ServerPlayerActor(PlayerActor):
         self.pid = pid
         self.server = server
 
-    async def on_game_start(self, view: PlayerView):
+    async def on_game_start(self, view: PlayerView) -> PlayerMemo:
         await self.server.send_event(self.pid, GameStartedEvent(pid=self.pid, view=view))
+        return (await self.server.wait_for_event(self.pid, MemoInitEvent)).memo
 
     async def wait_for_event_type(self, event_type: Type[ET]) -> ET:
         return await self.server.wait_for_event(self.pid, event_type)
@@ -86,7 +88,8 @@ class ClientPlayerProxy:
         game_started_event = await self.client.wait_for_event(GameStartedEvent)
 
         self.client.add_event_handler(GameEndedEvent, self.game_ended_handler)
-        await self.player.on_game_start(game_started_event.view)
+        memo = await self.player.on_game_start(game_started_event.view)
+        await self.client.send_event(MemoInitEvent(pid=self.pid, memo=memo))
         current_player = game_started_event.view.state.current_player
         player_count = game_started_event.view.config.player_count
 
