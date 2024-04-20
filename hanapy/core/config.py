@@ -3,6 +3,7 @@ from typing import Dict, List, Union
 from msgspec import Struct
 
 from hanapy.core.card import Card, CardInfo, CluedCards, Color
+from hanapy.types import SeenCards
 
 
 class PlayedCards(Struct):
@@ -44,6 +45,13 @@ class PlayedCards(Struct):
     @property
     def score(self):
         return sum(self.cards.values())
+
+    def get_all_cards(self, colors: List[Color]) -> SeenCards:
+        return SeenCards(
+            Card(color=Color.parse(c, colors), number=n)
+            for c, max_num in self.cards.items()
+            for n in range(1, max_num + 1)
+        )
 
 
 class DiscardPile(Struct):

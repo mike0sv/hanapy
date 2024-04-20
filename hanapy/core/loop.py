@@ -28,8 +28,10 @@ class GameLoop:
             raise ValueError("Invalid player count")
         deck = deck_generator.generate(config.cards)
         player_states = [
-            PlayerState(cards=[deck.draw() for _ in range(config.hand_size)], memo=PlayerMemo.create())
-            for _ in range(player_count)
+            PlayerState(
+                name=p.get_name(), cards=[deck.draw() for _ in range(config.hand_size)], memo=PlayerMemo.create()
+            )
+            for p in players
         ]
         self.data = GameData(
             players=player_states,

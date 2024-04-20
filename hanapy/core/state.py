@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List
 
 from msgspec import Struct
@@ -23,14 +24,16 @@ class GameData(BaseGameData):
         return self.get_player_view(self.state.current_player)
 
     def get_player_view(self, player: int) -> PlayerView:
-        return PlayerView(
-            name=f"player {player}",
+        view = PlayerView(
+            name=self.players[player].name,
             me=player,
             memo=self.players[player].memo,
-            config=self.config,
-            cards=[p.cards if i != player else [] for i, p in enumerate(self.players)],
-            state=self.state,
+            config=deepcopy(self.config),
+            cards=[deepcopy(p.cards) if i != player else [] for i, p in enumerate(self.players)],
+            state=deepcopy(self.state),
         )
+        view.refresh_card_info()
+        return view
 
     def card_at(self, playerpos: PlayerPos) -> Card:
         return self.players[playerpos.player].cards[playerpos.pos]

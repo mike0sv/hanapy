@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleBotPlayer(PlayerActor):
-    def __init__(self, log: bool = False):
+    def __init__(self, name: str, log: bool = False):
+        super().__init__(name)
         self.log = log
 
     @classmethod
@@ -23,7 +24,7 @@ class SimpleBotPlayer(PlayerActor):
     def get_event_handlers(self) -> EventHandlers:
         if self.log:
             return {
-                ObserveUpdateEvent: [lambda event: print_player_view(event.view) or True],
+                ObserveUpdateEvent: [lambda event: print_player_view(event.view, detailed=True) or True],
                 GameStartedEvent: [lambda event: print_player_view(event.view) or True],
             }
         return {}

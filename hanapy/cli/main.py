@@ -48,9 +48,9 @@ async def run(
         bot_impl = BOTS.get(bot)
         if bot_impl is None:
             raise typer.BadParameter(f"No such bot '{bot}'. Possible values: {list(BOTS)}")
-        player = bot_impl()
+        player = bot_impl(name)
     else:
-        player = ConsolePlayerActor()
+        player = ConsolePlayerActor(name)
 
     if serve:
         await AsyncServer(host, port).start(name, game_variant)

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class ServerPlayerActor(PlayerActor):
     def __init__(self, pid: PlayerID, server: HanapyServer):
+        super().__init__(pid)
         self.pid = pid
         self.server = server
 

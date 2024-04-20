@@ -72,7 +72,7 @@ def print_update(update: StateUpdate):
         print(f"player {discard.player} discards {discard.card.to_str(False)} from {discard.pos + 1}")
 
 
-def print_player_view(view: PlayerView):
+def print_player_view(view: PlayerView, detailed=False):
     print_played_cards(view)
     print_discarded_cards(view)
     print("player cards: ")
@@ -80,6 +80,10 @@ def print_player_view(view: PlayerView):
     print(f"Lives: {view.state.lives_left}, Clues: {view.state.clues_left}, Cards left: {view.state.cards_left}")
     if view.state.cards_left == 0:
         print("Turns left:", view.state.turns_left)
+    if detailed:
+        for i, cards in enumerate(view.state.clued.cards):
+            print_card_clues(i, cards)
+            print_card_clues_detailed(cards, view.config.cards)
 
 
 def print_game_end(view: PlayerView, game_result: GameResult):

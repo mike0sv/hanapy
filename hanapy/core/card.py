@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional, Set
+from typing import TYPE_CHECKING, Iterable, List, Literal, Optional, Set, overload
 
 import msgspec
 
@@ -27,7 +27,7 @@ class Color(msgspec.Struct, frozen=True):
         return f"[{self.value}]{self.char}[/{self.value}]"
 
 
-class Card(msgspec.Struct):
+class Card(msgspec.Struct, frozen=True):
     color: Color
     number: int
     clues: int = 0
@@ -41,6 +41,10 @@ class Clue(msgspec.Struct):
     to_player: int
     color: Optional[Color]
     number: Optional[int]
+
+    @classmethod
+    def new(cls, to_player: int, color: Optional[Color] = None, number: Optional[int] = None):
+        return Clue(to_player, color, number)
 
     def touches(self, card: Card) -> bool:
         if self.number is not None and card.number == self.number:
@@ -73,6 +77,10 @@ class CardInfo(msgspec.Struct):
             return next(iter(self.colors))
         return None
 
+    @property
+    def is_known(self) -> bool:
+        return self.color is not None and self.number is not None
+
     @classmethod
     def create(cls, card_config: "CardConfig"):
         return CardInfo(colors=set(card_config.colors), numbers=set(range(1, card_config.max_number + 1)))
@@ -91,9 +99,17 @@ class CardInfo(msgspec.Struct):
     def is_touched(self):
         return bool(self.number or self.color)
 
-    def as_card(self) -> Optional[Card]:
+    @overload
+    def as_card(self, force: Literal[True] = True) -> Card: ...
+
+    @overload
+    def as_card(self, force: Literal[False] = False) -> Optional[Card]: ...
+
+    def as_card(self, force: bool = False) -> Optional[Card]:
         if self.color is not None and self.number is not None:
             return Card(color=self.color, number=self.number)
+        if force:
+            raise ValueError()
         return None
 
     def touch(self, clue: Clue):
@@ -107,6 +123,11 @@ class CardInfo(msgspec.Struct):
             self.colors.discard(clue.color)
         if clue.number is not None:
             self.numbers.discard(clue.number)
+
+    def iter_possible(self) -> Iterable[Card]:
+        for color in self.colors:
+            for number in self.numbers:
+                yield Card(color=color, number=number)
 
 
 class CluedCards(msgspec.Struct):

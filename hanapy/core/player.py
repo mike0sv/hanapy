@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Callable, Counter, List, Set
 
 from msgspec import Struct
 
 from hanapy.core.action import Action, StateUpdate
 from hanapy.core.card import Card, CardInfo
 from hanapy.core.config import GameConfig, GameResult, GameState
-from hanapy.types import EventHandlers
+from hanapy.types import EventHandlers, SeenCards
 
 
 class PlayerMemo(Struct):
@@ -27,8 +27,40 @@ class PlayerView(Struct):
     def my_cards(self) -> List[CardInfo]:
         return self.state.clued[self.me]
 
+    def get_all_seen_cards(self) -> SeenCards:
+        result: Counter[Card] = self.state.played.get_all_cards(self.config.cards.colors)
+        result.update(self.state.discarded.cards)
+        for i, cards in enumerate(self.cards):
+            if i == self.me:
+                continue
+            result.update(cards)
+        result.update(c.as_card() for c in self.my_cards if c.is_known)
+        return result
+
+    def refresh_card_info(self):
+        seen_cards = self.get_all_seen_cards()
+        cant_have: Set[Card] = {
+            card for card, count in seen_cards.items() if self.config.cards.counts[card.number] == count
+        }
+        for card_info in self.my_cards:
+            if card_info.is_known:
+                continue
+            for color in list(card_info.colors):
+                possible = {Card(color, num) for num in card_info.numbers}
+                # if all impossible get clue
+                if possible.intersection(cant_have) == possible:
+                    card_info.colors.discard(color)
+            for number in list(card_info.numbers):
+                possible = {Card(color, number) for color in card_info.colors}
+                # if all impossible get clue
+                if possible.intersection(cant_have) == possible:
+                    card_info.numbers.discard(number)
+
 
 class PlayerActor(ABC):
+    def __init__(self, name: str):
+        self.name = name
+
     @abstractmethod
     async def on_game_start(self, view: PlayerView):
         raise NotImplementedError
@@ -54,11 +86,15 @@ class PlayerActor(ABC):
     def get_event_handlers(self) -> EventHandlers:
         return {}
 
+    def get_name(self) -> str:
+        return self.name
 
-Bot = Callable[[], PlayerActor]
+
+Bot = Callable[[str], PlayerActor]
 
 
 class PlayerState(Struct):
+    name: str
     cards: List[Card]
     memo: PlayerMemo
 

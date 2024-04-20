@@ -17,7 +17,8 @@ from hanapy.types import EventHandlers
 
 
 class ConsolePlayerActor(PlayerActor):
-    def __init__(self, commands: Optional[List[Command]] = None):
+    def __init__(self, name: str, commands: Optional[List[Command]] = None):
+        super().__init__(name)
         self.commands = commands or DEFAULT_COMMANDS
 
     def get_event_handlers(self) -> EventHandlers:
