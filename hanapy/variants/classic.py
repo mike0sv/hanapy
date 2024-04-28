@@ -1,5 +1,5 @@
 import random
-from typing import Sequence
+from typing import Optional, Sequence
 
 from hanapy.core.card import Card, Color
 from hanapy.core.config import CardConfig, GameConfig
@@ -17,18 +17,26 @@ CLASSIC_COLORS = [
 
 
 class ClassicDeckGenerator(DeckGenerator):
+    def __init__(self, random_seed: Optional[int] = None):
+        self.random_state = random_seed
+
     def generate(self, config: CardConfig) -> Deck:
         cards = []
         for col in config.colors:
             for num, count in config.counts.items():
                 cards.extend([Card(col, num)] * count)
 
-        random.shuffle(cards)
+        if self.random_state is not None:
+            random.seed(self.random_state)
+        random.shuffle(
+            cards,
+        )
         return Deck(cards=cards)
 
 
 class ClassicGame(BaseGame):
-    def __init__(self, players: Sequence[PlayerActor]):
+    def __init__(self, players: Sequence[PlayerActor], random_seed: Optional[int]):
+        self.random_seed = random_seed
         self.players = list(players)
 
     def get_card_config(self) -> CardConfig:
@@ -45,7 +53,7 @@ class ClassicGame(BaseGame):
         cards = self.get_card_config()
         return GameLoop(
             self.players,
-            ClassicDeckGenerator(),
+            ClassicDeckGenerator(self.random_seed),
             GameConfig(
                 max_lives=3,
                 hand_size=self.get_hand_size(player_count),

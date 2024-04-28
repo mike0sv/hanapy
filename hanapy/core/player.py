@@ -77,6 +77,14 @@ class PlayerView(Struct):
                 if possible.intersection(cant_have) == possible:
                     card_info.numbers.discard(number)
 
+    @property
+    def can_discard(self) -> bool:
+        return self.state.clues_left < self.config.max_clues
+
+    @property
+    def can_clue(self) -> bool:
+        return self.state.clues_left > 0
+
 
 class PlayerActor(ABC):
     def __init__(self, name: str):

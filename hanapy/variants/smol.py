@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Sequence
+from typing import Optional, Sequence
 
 from hanapy.core.config import CardConfig
 from hanapy.core.player import PlayerActor
@@ -7,8 +7,8 @@ from hanapy.variants.classic import CLASSIC_COLORS, ClassicGame
 
 
 class SmolGame(ClassicGame):
-    def __init__(self, players: Sequence[PlayerActor], max_colors: int, max_number: int):
-        super().__init__(players)
+    def __init__(self, players: Sequence[PlayerActor], max_colors: int, max_number: int, random_seed: Optional[int]):
+        super().__init__(players, random_seed)
         self.max_colors = max_colors
         self.max_number = max_number
 

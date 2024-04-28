@@ -60,6 +60,15 @@ class Clue(msgspec.Struct):
     def value(self):
         return self.number or self.color.paint(self.color.value)  # type: ignore[union-attr]
 
+    def __repr__(self):
+        if self.number is not None:
+            val = f"num={self.number}"
+        elif self.color is not None:
+            val = f"col={self.color.char}"
+        else:
+            val = "???"
+        return f"Clue[to={self.to_player},{val}]"
+
 
 class CardInfo(msgspec.Struct):
     colors: Set[Color]

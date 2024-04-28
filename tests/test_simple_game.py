@@ -4,7 +4,7 @@ from hanapy.variants.classic import ClassicGame
 
 async def test_classic_game():
     players = [DiscardingPlayer("1"), DiscardingPlayer("1")]
-    game = ClassicGame(players)
+    game = ClassicGame(players, random_seed=0)
     loop = game.get_loop()
     loop.data.config.unlimited_clues = True
     await loop.run()

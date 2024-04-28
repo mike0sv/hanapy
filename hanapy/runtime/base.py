@@ -3,7 +3,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Type, Union
 
-from hanapy.core.loop import GameVariant
+from hanapy.core.loop import GameVariant, RandomSeed
 from hanapy.runtime.events import (
     Event,
     EventHandler,
@@ -71,18 +71,18 @@ class HanapyServer(HanapyBase):
     def list_players(self) -> List[PlayerID]:
         raise NotImplementedError
 
-    async def start_game_loop(self, host_pid: PlayerID, game_variant: GameVariant):
+    async def start_game_loop(self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed):
         from hanapy.runtime.players import ServerPlayerActor
 
         await self.wait_for_event(host_pid, StartGameEvent)
         players = [ServerPlayerActor(uid, self) for uid in self.list_players()]
-        game = game_variant(players)
+        game = game_variant(players, random_seed)
         loop = game.get_loop()
         await loop.run()
 
-    async def start(self, host_pid: PlayerID, game_variant: GameVariant):
+    async def start(self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed):
         asyncio.get_event_loop().create_task(self.run())
-        asyncio.get_event_loop().create_task(self.start_game_loop(host_pid, game_variant))
+        asyncio.get_event_loop().create_task(self.start_game_loop(host_pid, game_variant, random_seed))
 
 
 class HanapyClient(HanapyBase):

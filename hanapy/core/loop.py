@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, List, Sequence
+from typing import Callable, List, Optional, Sequence
 
 from hanapy.core.card import CluedCards
 from hanapy.core.config import DiscardPile, GameConfig, GameState, PlayedCards
@@ -17,7 +17,8 @@ class BaseGame:
         raise NotImplementedError
 
 
-GameVariant = Callable[[Sequence[PlayerActor]], BaseGame]
+RandomSeed = Optional[int]
+GameVariant = Callable[[Sequence[PlayerActor], RandomSeed], BaseGame]
 
 
 class GameLoop:

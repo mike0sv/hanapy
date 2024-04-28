@@ -130,6 +130,9 @@ class DiscardAction(Action):
             new_card=game_data.deck.peek(),
         )
 
+    def __str__(self):
+        return f"ActionDiscard[{self.card}]"
+
 
 class PlayAction(Action):
     __typename__: ClassVar = "play"
@@ -147,6 +150,9 @@ class PlayAction(Action):
             discard=(PlayerPosCard(self.player, self.card, card)) if not valid_play else None,
         )
 
+    def __str__(self):
+        return f"ActionPlay[{self.card}]"
+
 
 class ClueAction(Action):
     __typename__: ClassVar = "clue"
@@ -159,3 +165,6 @@ class ClueAction(Action):
             clues=-1,
             clue=ClueResult.from_clue(self.clue, game_data.players[self.clue.to_player].cards),
         )
+
+    def __str__(self):
+        return f"Action{self.clue}"

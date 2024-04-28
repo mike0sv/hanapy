@@ -1,5 +1,6 @@
+import asyncio
 import logging
-from typing import Type
+from typing import Optional, Type
 
 import aioconsole
 
@@ -14,6 +15,7 @@ from hanapy.runtime.events import (
     GameStartedEvent,
     MemoInitEvent,
     ObserveUpdateEvent,
+    PlayerRegisteredEvent,
     StartGameEvent,
     UpdatePlayerMemoEvent,
     WaitForActionEvent,
@@ -60,6 +62,7 @@ class ClientPlayerProxy:
         self.client = client
         self.player = player
         self.player_num: int = -1
+        self.player_count = 1
         self.running = True
 
     async def observe(self):
@@ -72,17 +75,17 @@ class ClientPlayerProxy:
         self.running = False
         return True
 
-    async def run(self, is_host: bool):
+    async def player_registered_handler(self, event: PlayerRegisteredEvent) -> bool:
+        logger.debug(f"Incrementing player count on {event}")
+        self.player_count += 1
+        return True
+
+    async def run(self, is_host: bool, auto_start_players: Optional[int]):
         await self.client.connect()
         self.player_num = await self.client.register(self.pid)
 
-        # todo use callback
         if is_host:
-            while True:
-                msg = await aioconsole.ainput("Enter 'start'\n")
-                if msg == "start":
-                    await self.client.send_event(StartGameEvent(pid=self.pid))
-                    break
+            await self.wait_for_start(auto_start_players)
 
         logger.debug("running client game proxy loop")
         game_started_event = await self.client.wait_for_event(GameStartedEvent)
@@ -110,3 +113,28 @@ class ClientPlayerProxy:
                     await self.player.on_invalid_action(verification.msg)
             await self.observe()
             current_player = (current_player + 1) % player_count
+
+    async def wait_for_start(self, auto_start_players: Optional[int]):
+        # todo use callbacks or smth
+        async def console_start():
+            while True:
+                msg = await aioconsole.ainput("Enter 'start'\n")
+                if msg == "start":
+                    break
+
+        start_triggers = [console_start()]
+        if auto_start_players is not None:
+            self.client.add_event_handler(PlayerRegisteredEvent, self.player_registered_handler)
+
+            async def wait_for_players():
+                while True:
+                    if self.player_count == auto_start_players:
+                        break
+                    await asyncio.sleep(0.1)
+
+            print(f"Game will start when there are {auto_start_players} players")
+            start_triggers.append(wait_for_players())
+        finished, unfinished = await asyncio.wait(start_triggers, return_when=asyncio.FIRST_COMPLETED)
+        for u in unfinished:
+            u.cancel()
+        await self.client.send_event(StartGameEvent(pid=self.pid))

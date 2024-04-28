@@ -14,6 +14,8 @@ from hanapy.runtime.buffers import EventWaitAborted
 from hanapy.runtime.players import ClientPlayerProxy
 from hanapy.variants import VARIANTS
 
+logging.basicConfig(level=logging.CRITICAL)
+
 app = Typer(pretty_exceptions_enable=False)
 
 
@@ -38,6 +40,8 @@ async def run(
     variant: str = Option("classic"),
     bot: Optional[str] = Option(None),
     debug: bool = Option(False, "-d"),
+    seed: Optional[int] = Option(None, "-s", "--seed"),
+    auto_start_players: Optional[int] = Option(None, "-a", "--autostart"),
 ):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -53,14 +57,14 @@ async def run(
         player = ConsolePlayerActor(name)
 
     if serve:
-        await AsyncServer(host, port).start(name, game_variant)
+        await AsyncServer(host, port).start(name, game_variant, random_seed=seed)
 
     client = AsyncClient(host, port)
     client.add_event_handlers(player.get_event_handlers())
     player_proxy = ClientPlayerProxy(name, client, player)
 
     try:
-        await player_proxy.run(is_host=serve)
+        await player_proxy.run(is_host=serve, auto_start_players=auto_start_players)
     except EventWaitAborted:
         print("exiting")
 
