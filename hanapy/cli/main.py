@@ -7,7 +7,7 @@ import typer
 from typer import Option, Typer
 
 from hanapy.cli.utils import get_player, get_variant, setup_debug
-from hanapy.players.console.player import ConsolePlayerActor
+from hanapy.players.console.player import ConsolePlayerActor, print_player_view_callback, wait_input_callback
 from hanapy.runtime.asyncio import AsyncClient, AsyncServer
 from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT
 from hanapy.runtime.buffers import EventWaitAborted
@@ -41,13 +41,15 @@ async def play(
     debug: bool = Option(False, "-d"),
     seed: Optional[int] = Option(None, "-s", "--seed"),
     auto_start_players: Optional[int] = Option(None, "-a", "--autostart"),
+    log: Optional[str] = Option(None, "-l", "--log"),
 ):
     setup_debug(debug)
     game_variant = get_variant(variant)
     player = get_player(bot, name=name) if bot is not None else ConsolePlayerActor(name)
 
     if serve:
-        await AsyncServer(host, port).start(name, game_variant, random_seed=seed)
+        server = AsyncServer(host, port)
+        await server.start(name, game_variant, random_seed=seed, log_file=log)
 
     client = AsyncClient(host, port)
     client.add_event_handlers(player.get_event_handlers())
@@ -66,6 +68,8 @@ async def play_local(
     debug: bool = Option(False, "-d"),
     seed: Optional[int] = Option(None, "-s", "--seed"),
     players: List[str] = Option(..., "-p", "--player"),  # noqa: B008
+    pause: bool = Option(False),
+    log: Optional[str] = Option(None, "-l", "--log"),
 ):
     setup_debug(debug)
     game_variant = get_variant(variant)
@@ -75,7 +79,13 @@ async def play_local(
 
     game = game_variant(player_actors, seed)
     loop = game.get_loop()
-    await loop.run()
+
+    await loop.run(
+        turn_begin_callback=print_player_view_callback if pause else None,
+        turn_end_callback=wait_input_callback if pause else None,
+    )
+    if log is not None:
+        loop.save_logs(log)
 
 
 def main():

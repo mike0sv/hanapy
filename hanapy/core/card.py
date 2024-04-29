@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, Iterable, List, Literal, Optional, Set, overload
+from typing import TYPE_CHECKING, Iterable, List, Literal, Optional, overload
 
 import msgspec
+from ordered_set import OrderedSet
 
 if TYPE_CHECKING:
     from hanapy.core.config import CardConfig
@@ -71,8 +72,8 @@ class Clue(msgspec.Struct):
 
 
 class CardInfo(msgspec.Struct):
-    colors: Set[Color]
-    numbers: Set[int]
+    colors: OrderedSet[Color]
+    numbers: OrderedSet[int]
     is_touched: bool
 
     @property
@@ -94,7 +95,9 @@ class CardInfo(msgspec.Struct):
     @classmethod
     def create(cls, card_config: "CardConfig"):
         return CardInfo(
-            colors=set(card_config.colors), numbers=set(range(1, card_config.max_number + 1)), is_touched=False
+            colors=OrderedSet(card_config.colors),
+            numbers=OrderedSet(range(1, card_config.max_number + 1)),
+            is_touched=False,
         )
 
     def to_str(self):
@@ -122,9 +125,9 @@ class CardInfo(msgspec.Struct):
 
     def touch(self, clue: Clue):
         if clue.number is not None:
-            self.numbers = {clue.number}
+            self.numbers = OrderedSet((clue.number,))
         if clue.color is not None:
-            self.colors = {clue.color}
+            self.colors = OrderedSet((clue.color,))
         self.is_touched = True
 
     def not_touch(self, clue: Clue):

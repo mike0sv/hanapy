@@ -2,6 +2,7 @@ from functools import lru_cache
 from typing import Any, ClassVar, Dict, Type, TypeVar, Union
 
 import msgspec
+from ordered_set import OrderedSet
 
 
 @lru_cache
@@ -92,6 +93,8 @@ def encode(value):
     # print("encode", value)
     if isinstance(value, PolyStruct):
         return value.__struct__(**value.__dict__)
+    if isinstance(value, OrderedSet):
+        return list(value)
     raise NotImplementedError
 
 
@@ -109,7 +112,7 @@ def decode(cls: Type, value):
 T = TypeVar("T", bound=Union[PolyStruct, msgspec.Struct])
 
 
-def dumps(obj: T, module=msgspec.json) -> Any:
+def dumps(obj: Union[T, Any], module=msgspec.json) -> Any:
     try:
         data = msgspec.to_builtins(obj, enc_hook=encode)
     except TypeError:

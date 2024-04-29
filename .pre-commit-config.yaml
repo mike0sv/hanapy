@@ -27,3 +27,4 @@ repos:
       - id: mypy
         additional_dependencies:
           - msgspec
+          - ordered-set

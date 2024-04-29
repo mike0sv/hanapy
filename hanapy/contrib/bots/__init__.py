@@ -9,5 +9,6 @@ BOTS: Dict[str, Bot] = {
     "console": ConsolePlayerActor,
     "simple": SimpleBotPlayer,
     "simple_log": SimpleBotPlayer.bot(log=True),
+    "rank_conv": RankingConventionsBotPlayer.bot(log=False),
     "rank_conv_log": RankingConventionsBotPlayer.bot(log=True),
 }

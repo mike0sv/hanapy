@@ -77,6 +77,7 @@ class CardConfig(Struct):
 
 
 class GameState(Struct):
+    turn: int
     clues_left: int
     lives_left: int
     played: PlayedCards

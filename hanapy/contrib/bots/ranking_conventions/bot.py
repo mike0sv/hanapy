@@ -62,7 +62,7 @@ class RankingConventionsBotPlayer(BaseBotPlayer):
             for convention in self.conventions:
                 action_score.add(conview, convention)
 
-        sorted_actions = sorted(possible_actions, key=lambda x: -x.score)
+        sorted_actions = sorted(possible_actions, key=lambda x: (-x.score, str(x.action)))
         if self.log:
             for action_score in sorted_actions:
                 print(action_score.action, action_score.score, action_score.get_detailed_repr())

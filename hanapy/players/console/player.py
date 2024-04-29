@@ -5,6 +5,7 @@ from aioconsole import ainput
 from hanapy.core.action import Action, StateUpdate
 from hanapy.core.config import GameResult
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerView
+from hanapy.core.state import GameData
 from hanapy.players.console.commands import DEFAULT_COMMANDS, ActionCommand, Command, CommandParseError, match_command
 from hanapy.players.console.event_handlers import CONSOLE_EVENT_HANDLERS
 from hanapy.players.console.render import (
@@ -65,3 +66,11 @@ class ConsolePlayerActor(PlayerActor):
                 command.execute(view, param)
             except (CommandParseError, UnicodeDecodeError) as e:
                 print("error:", e.args[0])
+
+
+async def wait_input_callback(game_data: GameData):
+    await ainput()
+
+
+async def print_player_view_callback(me: int, view: PlayerView):
+    print_player_view(view, detailed=True)

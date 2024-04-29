@@ -16,7 +16,12 @@ class ConventionsView:
 
     def chop(self, player: Optional[int] = None) -> int:
         player = player or self.view.me
-        return next(i for i, card in reversed(list(enumerate(self.view.state.clued[player]))) if not card.is_touched)
+        try:
+            return next(
+                i for i, card in reversed(list(enumerate(self.view.state.clued[player]))) if not card.is_touched
+            )
+        except StopIteration:
+            return -1  # todo: think about it
 
     def chop_card(self, player: int) -> Tuple[int, Card]:
         if player == self.view.me:

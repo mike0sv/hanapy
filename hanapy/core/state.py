@@ -58,6 +58,7 @@ class GameData(BaseGameData):
             max_score=self.config.cards.max_number * self.config.cards.color_count,
         )
 
-    def next_player(self):
+    def next_turn(self):
+        self.state.turn += 1
         self.state.current_player += 1
         self.state.current_player %= self.config.player_count

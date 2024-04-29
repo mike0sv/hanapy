@@ -71,7 +71,9 @@ class HanapyServer(HanapyBase):
     def list_players(self) -> List[PlayerID]:
         raise NotImplementedError
 
-    async def start_game_loop(self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed):
+    async def start_game_loop(
+        self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed, log_file: Optional[str]
+    ):
         from hanapy.runtime.players import ServerPlayerActor
 
         await self.wait_for_event(host_pid, StartGameEvent)
@@ -79,10 +81,14 @@ class HanapyServer(HanapyBase):
         game = game_variant(players, random_seed)
         loop = game.get_loop()
         await loop.run()
+        if log_file is not None:
+            loop.save_logs(log_file)
 
-    async def start(self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed):
+    async def start(
+        self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed, log_file: Optional[str]
+    ):
         asyncio.get_event_loop().create_task(self.run())
-        asyncio.get_event_loop().create_task(self.start_game_loop(host_pid, game_variant, random_seed))
+        asyncio.get_event_loop().create_task(self.start_game_loop(host_pid, game_variant, random_seed, log_file))
 
 
 class HanapyClient(HanapyBase):
