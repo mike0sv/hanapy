@@ -33,8 +33,10 @@ class Card(msgspec.Struct, frozen=True):
     number: int
     clues: int = 0
 
-    def to_str(self, touched: bool):
-        res = self.color.paint(f"{self.number}{self.color.char}", is_touched=touched)
+    def to_str(self, touched: bool, colored: bool = True):
+        res = f"{self.number}{self.color.char}"
+        if colored:
+            res = self.color.paint(res, is_touched=touched)
         return res
 
 

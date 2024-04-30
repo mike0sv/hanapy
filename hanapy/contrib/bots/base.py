@@ -27,7 +27,7 @@ class BaseBotPlayer(PlayerActor, ABC):
     async def on_game_start(self, view: PlayerView) -> PlayerMemo:
         return view.memo
 
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
+    async def observe_update(self, view: PlayerView, update: StateUpdate, new_view: PlayerView) -> PlayerMemo:
         return view.memo
 
     async def on_game_end(self, view: PlayerView, game_result: GameResult):

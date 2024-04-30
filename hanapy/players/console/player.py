@@ -38,12 +38,12 @@ class ConsolePlayerActor(PlayerActor):
         print("-" * 10)
         return action
 
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
+    async def observe_update(self, view: PlayerView, update: StateUpdate, new_view: PlayerView) -> PlayerMemo:
         print_update(update)
         next_player = (update.player + 1) % view.config.player_count
         if next_player != view.me:
             print("-" * 20)
-            print_player_view(view)
+            print_player_view(new_view)
             print(f"It's player {next_player} turn")
         return view.memo
 

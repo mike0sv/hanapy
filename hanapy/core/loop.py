@@ -98,9 +98,16 @@ class GameLoop:
             self.logs.append(
                 TurnLog(turn=self.data.state.turn, data=(deepcopy(self.data)), action=action, update=update)
             )
+            old_views = [deepcopy(v) for _, v in self.enum_player_views()]
             update.apply(self.data)
-            # todo: do we send old state or new state or both?
-            await asyncio.gather(*[player.observe_update(view, update) for player, view in self.enum_player_views()])
+            new_memos = await asyncio.gather(
+                *[
+                    player.observe_update(old_views[i], update, view)
+                    for i, (player, view) in enumerate(self.enum_player_views())
+                ]
+            )
+            for player, player_state in enumerate(self.data.players):
+                player_state.memo = new_memos[player]
 
             self.data.next_turn()
             if self.data.game_ended:

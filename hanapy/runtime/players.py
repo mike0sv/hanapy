@@ -42,8 +42,10 @@ class ServerPlayerActor(PlayerActor):
         await self.server.send_event(self.pid, WaitForActionEvent(pid=self.pid, view=view))
         return (await self.wait_for_event_type(ActionEvent)).action
 
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
-        await self.server.send_event(self.pid, ObserveUpdateEvent(pid=self.pid, view=view, update=update))
+    async def observe_update(self, view: PlayerView, update: StateUpdate, new_view: PlayerView) -> PlayerMemo:
+        await self.server.send_event(
+            self.pid, ObserveUpdateEvent(pid=self.pid, view=view, new_view=new_view, update=update)
+        )
         return (await self.wait_for_event_type(UpdatePlayerMemoEvent)).memo
 
     async def on_game_end(self, view: PlayerView, game_result: GameResult):
@@ -67,7 +69,7 @@ class ClientPlayerProxy:
 
     async def observe(self):
         observe = await self.client.wait_for_event(ObserveUpdateEvent)
-        memo = await self.player.observe_update(observe.view, observe.update)
+        memo = await self.player.observe_update(observe.view, observe.update, observe.new_view)
         await self.client.send_event(UpdatePlayerMemoEvent(pid=self.pid, memo=memo))
 
     async def game_ended_handler(self, event: GameEndedEvent) -> bool:

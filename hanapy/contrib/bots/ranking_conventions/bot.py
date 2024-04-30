@@ -50,14 +50,16 @@ class RankingConventionsBotPlayer(BaseBotPlayer):
         return partial(RankingConventionsBotPlayer, conventions=conventions or DEFAULT_CONVENTIONS, log=log)
 
     async def on_game_start(self, view: PlayerView) -> PlayerMemo:
-        conview = RankingConventionsView(view, self.conventions)
+        logger.debug("[%s] Initializing conventions: %s", view.me, [c.__class__.__name__ for c in self.conventions])
+        conview = RankingConventionsView(view, self.conventions, True)
         for convention in self.conventions:
             convention.on_init(conview)
         return view.memo
 
     async def get_next_action(self, view: PlayerView) -> Action:
         possible_actions = [ActionScore(action) for action in get_possible_actions(view)]
-        conview = RankingConventionsView(view, self.conventions)
+        conview = RankingConventionsView(view, self.conventions, is_observing=False)
+        logger.debug("[%s] Scoring possible actions", view.me)
         for action_score in possible_actions:
             for convention in self.conventions:
                 action_score.add(conview, convention)
@@ -66,10 +68,12 @@ class RankingConventionsBotPlayer(BaseBotPlayer):
         if self.log:
             for action_score in sorted_actions:
                 print(action_score.action, action_score.score, action_score.get_detailed_repr())
+        logger.debug("[%s] Best action: %s", view.me, sorted_actions[0].action)
         return sorted_actions[0].action
 
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
-        conview = RankingConventionsView(view, self.conventions)
+    async def observe_update(self, view: PlayerView, update: StateUpdate, new_view: PlayerView) -> PlayerMemo:
+        logger.debug("[%s] Observing update: %s", view.me, update)
+        conview = RankingConventionsView(view, self.conventions, is_observing=True)
         for convention in self.conventions:
             convention.observe(conview, update)
         return view.memo

@@ -1,3 +1,5 @@
+from copy import deepcopy
+from functools import wraps
 from typing import List, Optional, Tuple
 
 from hanapy.conventions.cells import ClueTypeCell, EarlyGameCell
@@ -6,9 +8,31 @@ from hanapy.core.card import Card, CardInfo, Clue
 from hanapy.core.player import PlayerView
 
 
+def observing_only(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        self: ConventionsView = args[0]
+        if not self.is_observing:
+            raise AttributeError(f"{f.__name__} can be called only when observing updates")
+        return f(*args, **kwargs)
+
+    return inner
+
+
+def scoring_only(f):
+    @wraps(f)
+    def inner(self: "ConventionsView", *args, **kwargs):
+        if self.is_observing:
+            raise AttributeError(f"{f.__name__} can be called only when scoring actions")
+        return f(self, *args, **kwargs)
+
+    return inner
+
+
 class ConventionsView:
-    def __init__(self, view: PlayerView):
+    def __init__(self, view: PlayerView, is_observing: bool):
         self.view = view
+        self.is_observing = is_observing
 
     @property
     def me(self):
@@ -49,13 +73,14 @@ class ConventionsView:
 
         return focus, cards[focus]
 
-    def get_clue_focus(self, clue: ClueResult) -> int:
+    def get_clue_focus(self, clue: Clue) -> int:
         chop = self.chop(clue.to_player)
-        if chop in clue.touched:
+        touched = clue.touched if isinstance(clue, ClueResult) else clue.get_touched(self.view.cards[clue.to_player])
+        if chop in touched:
             return chop
 
-        newly_touched = [t for t in clue.touched if not self.view.state.clued[clue.to_player][t].is_touched]
-        focus = clue.touched[0] if len(newly_touched) == 0 else newly_touched[0]
+        newly_touched = [t for t in touched if not self.view.state.clued[clue.to_player][t].is_touched]
+        focus = touched[0] if len(newly_touched) == 0 else newly_touched[0]
 
         return focus
 
@@ -63,22 +88,32 @@ class ConventionsView:
     def clue_type_cell(self) -> ClueTypeCell:
         return self.view.memo.get(ClueTypeCell)
 
-    def can_be_critical(self, focus: int, clue: Clue) -> bool:
-        if clue.to_player == self.me:
-            raise NotImplementedError
-        card = self.view.cards[clue.to_player][focus]
+    def _can_be_critical(self, card: Card) -> bool:
         if self.view.state.played.is_obsolete(card, self.view.config.cards.max_number):
             return False
+        if self.view.config.cards.counts[card.number] == 1:
+            return False  # ???
         discarded = len([c for c in self.view.state.discarded.cards if c == card])
         if discarded + 1 == self.view.config.cards.counts[card.number]:
             return True
         return False
 
-    def is_save_clue(self, clue: Clue) -> Tuple[int, bool]:
-        focus, card = self.get_clue_focus_card(clue)
+    def can_be_critical(self, focus: int, clue: Clue) -> bool:
+        if clue.to_player == self.me:
+            card_info = deepcopy(self.view.my_cards[focus])
+            card_info.touch(clue)
+            return any(
+                self._can_be_critical(card) and not self.view.state.played.is_valid_play(card)
+                for card in card_info.iter_possible()
+            )
+        card = self.view.cards[clue.to_player][focus]
+        return self._can_be_critical(card)
+
+    def is_save_clue(self, clue: Clue) -> bool:
+        focus = self.get_clue_focus(clue)
         if focus != self.chop(clue.to_player):
-            return focus, False
-        return focus, self.can_be_critical(focus, clue)
+            return False
+        return self.can_be_critical(focus, clue)
 
     @property
     def is_early_game(self):
@@ -90,7 +125,7 @@ class ConventionsView:
     def is_play_clue_connected(self, clue: Clue):
         if self.is_save_clue(clue):
             return False
-        _, card = self.get_clue_focus(clue)
+        _, card = self.get_clue_focus_card(clue)
         starting = self.view.state.played.cards[card.color.char]
         if card.number == starting + 1:
             return True

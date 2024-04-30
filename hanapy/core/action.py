@@ -36,6 +36,15 @@ class ClueResult(Clue):
             to_player=clue.to_player, number=clue.number, color=clue.color, touched=clue.get_touched(cards)
         )
 
+    def __repr__(self):
+        if self.number is not None:
+            val = f"num={self.number}"
+        elif self.color is not None:
+            val = f"col={self.color.char}"
+        else:
+            val = "???"
+        return f"Clue[to={self.to_player},{val},touched={self.touched}]"
+
 
 class StateUpdate(Struct):
     player: int
@@ -106,6 +115,23 @@ class StateUpdate(Struct):
             if len(self.clue.touched) == 0:
                 raise InvalidUpdateError("empty clue")
             # todo empty/wrong clues
+
+    def __repr__(self):
+        res = "StateUpdate["
+        if self.clue is not None:
+            res += f"clue={self.clue},"
+        if self.discard is not None:
+            res += f"discard={self.discard.card.to_str(False, False)} from {self.discard.pos},"
+        if self.play is not None:
+            res += f"play={self.play.card.to_str(False, False)} from {self.play.pos},"
+        if self.new_card is not None:
+            res += f"new_card={self.new_card.to_str(False, False)},"
+        if self.lives != 0:
+            res += f"lives={self.lives},"
+        if self.clues != 0:
+            res += f"clues={self.clues},"
+        res += f"player={self.player}"
+        return res + "]"
 
 
 class Action(PolyStruct):

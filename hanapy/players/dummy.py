@@ -13,5 +13,5 @@ class DiscardingPlayer(PlayerActor):
     async def get_next_action(self, view: PlayerView) -> Action:
         return DiscardAction(player=view.me, card=0)
 
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
+    async def observe_update(self, view: PlayerView, update: StateUpdate, new_view: PlayerView) -> PlayerMemo:
         return view.memo

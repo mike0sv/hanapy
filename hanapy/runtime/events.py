@@ -39,6 +39,7 @@ class ObserveUpdateEvent(Event):
     __typename__: ClassVar = "observe_update"
 
     view: PlayerView
+    new_view: PlayerView
     update: StateUpdate
 
 

@@ -99,7 +99,7 @@ class PlayerActor(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def observe_update(self, view: PlayerView, update: StateUpdate) -> PlayerMemo:
+    async def observe_update(self, view: PlayerView, update: StateUpdate, new_view: PlayerView) -> PlayerMemo:
         raise NotImplementedError
 
     @abstractmethod
