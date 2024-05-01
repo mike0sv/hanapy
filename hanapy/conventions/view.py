@@ -39,7 +39,7 @@ class ConventionsView:
         return self.view.me
 
     def chop(self, player: Optional[int] = None) -> int:
-        player = player or self.view.me
+        player = player if player is not None else self.view.me
         try:
             return next(
                 i for i, card in reversed(list(enumerate(self.view.state.clued[player]))) if not card.is_touched
