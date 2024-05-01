@@ -1,7 +1,16 @@
 from typing import List
 
+from msgspec import Struct
+
+from hanapy.core.action import PlayerPos
 from hanapy.core.config import GameConfig
 from hanapy.core.player import MemoCell
+
+
+class ClueType(Struct):
+    play: bool
+    save: bool
+    play_before: List[PlayerPos]
 
 
 class ClueTypeCell(MemoCell):

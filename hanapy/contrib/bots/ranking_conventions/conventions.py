@@ -177,7 +177,7 @@ class PlayOnlyTouched(RankingConvention):
         return 0
 
 
-class PlayOnlyKnown(RankingConvention):
+class PlayKnown(RankingConvention):
     def score_play(self, view: RankingConventionsView, card: int) -> float:
         if view.view.state.played.is_valid_play(view.view.my_cards[card]):
             return 200
@@ -204,11 +204,19 @@ class PlayClueOnlyConnected(RankingConvention):
         if is_save:
             logger.debug("[%s] %s is save clue for %s at %s", view.me, clue, card.to_str(False, False), focus)
             return 0
-        if view.is_play_clue_connected(clue):
+        if view.is_play_clue_connected(clue, all_connecting_are_play=True):
             logger.debug("[%s] %s is connected play clue for %s at %s", view.me, clue, card.to_str(False, False), focus)
             return 100
         logger.debug("[%s] %s is disconnected play clue for %s at %s", view.me, clue, card.to_str(False, False), focus)
         return -500
+
+
+class NoPlayClueOnPlayClued(RankingConvention):
+    def score_clue(self, view: RankingConventionsView, clue: Clue) -> float:
+        focus = view.get_clue_focus(clue)
+        if view.view.memo.get(ClueTypeCell).is_play(clue.to_player, focus):
+            return -200
+        return 0
 
 
 # DEFAULT_CONVENTIONS = [ClassifyClue(), DiscardFromChop(), ClueUnplayable()]

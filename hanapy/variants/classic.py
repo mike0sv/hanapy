@@ -42,23 +42,25 @@ class ClassicGame(BaseGame):
     def get_card_config(self) -> CardConfig:
         return CardConfig(colors=CLASSIC_COLORS, counts={1: 3, 2: 2, 3: 2, 4: 2, 5: 1})
 
-    def get_hand_size(self, player_count: int):
-        return {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_count]
-
-    def get_loop(self) -> "GameLoop":
+    def get_game_config(self) -> GameConfig:
         player_count = len(self.players)
         if player_count < 2 or player_count > 5:
             pass
             # raise ValueError()
-        cards = self.get_card_config()
+        return GameConfig(
+            max_lives=3,
+            hand_size=self.get_hand_size(player_count),
+            player_count=player_count,
+            max_clues=8,
+            cards=self.get_card_config(),
+        )
+
+    def get_hand_size(self, player_count: int):
+        return {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_count]
+
+    def get_loop(self) -> "GameLoop":
         return GameLoop(
             self.players,
             ClassicDeckGenerator(self.random_seed),
-            GameConfig(
-                max_lives=3,
-                hand_size=self.get_hand_size(player_count),
-                player_count=player_count,
-                max_clues=8,
-                cards=cards,
-            ),
+            self.get_game_config(),
         )

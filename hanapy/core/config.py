@@ -87,6 +87,20 @@ class GameState(Struct):
     current_player: int
     cards_left: int
 
+    @classmethod
+    def create(cls, config: "GameConfig", cards_left: int):
+        return GameState(
+            turn=1,
+            clues_left=config.max_clues,
+            lives_left=config.max_lives,
+            clued=CluedCards.create(config.player_count, config.hand_size, config.cards),
+            played=PlayedCards.empty(config.cards.colors),
+            discarded=DiscardPile.new(),
+            turns_left=config.player_count,
+            current_player=0,
+            cards_left=cards_left,
+        )
+
 
 class GameConfig(Struct):
     max_lives: int

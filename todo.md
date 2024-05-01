@@ -1,5 +1,14 @@
 # Plans
 
+## H-Group Conventions
+
+### Beginner guide
+
+- chop
+- only play/save clues
+- play clues
+- delayed play clues
+
 # Known bugs
 
 - if disconnected on player move, does not exit

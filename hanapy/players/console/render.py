@@ -73,6 +73,7 @@ def print_update(update: StateUpdate):
 
 
 def print_player_view(view: PlayerView, detailed=False):
+    print(f"Turn {view.state.turn}")
     print_played_cards(view)
     print_discarded_cards(view)
     print("player cards: ")

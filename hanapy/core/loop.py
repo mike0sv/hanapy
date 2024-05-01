@@ -9,8 +9,7 @@ import msgspec
 from msgspec import Struct
 
 from hanapy.core.action import Action, StateUpdate
-from hanapy.core.card import CluedCards
-from hanapy.core.config import DiscardPile, GameConfig, GameState, PlayedCards
+from hanapy.core.config import GameConfig, GameState
 from hanapy.core.deck import DeckGenerator
 from hanapy.core.errors import InvalidUpdateError
 from hanapy.core.player import PlayerActor, PlayerMemo, PlayerState, PlayerView
@@ -52,17 +51,7 @@ class GameLoop:
         self.data = GameData(
             players=player_states,
             deck=deck,
-            state=GameState(
-                turn=1,
-                clues_left=config.max_clues,
-                lives_left=config.max_lives,
-                clued=CluedCards.create(player_count, config.hand_size, config.cards),
-                played=PlayedCards.empty(config.cards.colors),
-                discarded=DiscardPile.new(),
-                turns_left=player_count,
-                current_player=0,
-                cards_left=deck.size(),
-            ),
+            state=GameState.create(config, deck.size()),
             config=config,
         )
         self.logs: List[TurnLog] = []

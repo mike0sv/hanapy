@@ -49,6 +49,16 @@ class Clue(msgspec.Struct):
     def new(cls, to_player: int, color: Optional[Color] = None, number: Optional[int] = None):
         return Clue(to_player, color, number)
 
+    @classmethod
+    def from_string(cls, to_player: int, clue: str, cards: "CardConfig"):
+        try:
+            number = int(clue)
+            color = None
+        except ValueError:
+            number = None
+            color = Color.parse(clue, cards.colors)
+        return Clue(to_player, color, number)
+
     def touches(self, card: Card) -> bool:
         if self.number is not None and card.number == self.number:
             return True
