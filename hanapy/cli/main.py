@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from functools import wraps
 from typing import List, Optional
 
@@ -12,8 +11,6 @@ from hanapy.runtime.asyncio import AsyncClient, AsyncServer
 from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT
 from hanapy.runtime.buffers import EventWaitAborted
 from hanapy.runtime.players import ClientPlayerProxy
-
-logging.basicConfig(level=logging.CRITICAL)
 
 app = Typer(pretty_exceptions_enable=False)
 
@@ -43,7 +40,7 @@ async def play(
     auto_start_players: Optional[int] = Option(None, "-a", "--autostart"),
     log: Optional[str] = Option(None, "-l", "--log"),
 ):
-    setup_debug(debug)
+    await setup_debug(debug)
     game_variant = get_variant(variant)
     player = get_player(bot, name=name) if bot is not None else ConsolePlayerActor(name)
 
@@ -71,7 +68,7 @@ async def play_local(
     pause: bool = Option(False),
     log: Optional[str] = Option(None, "-l", "--log"),
 ):
-    setup_debug(debug)
+    await setup_debug(debug)
     game_variant = get_variant(variant)
     if len(players) < 2:
         raise typer.BadParameter("Should be at least 2 players")

@@ -6,12 +6,13 @@ import typer
 from hanapy.contrib.bots import BOTS
 from hanapy.core.loop import GameVariant
 from hanapy.core.player import PlayerActor
+from hanapy.utils.log import init_logger
 from hanapy.variants import VARIANTS
 
 
-def setup_debug(debug: bool):
-    if debug:
-        logging.basicConfig(level=logging.DEBUG)
+async def setup_debug(debug: bool):
+    level = logging.DEBUG if debug else logging.CRITICAL
+    await init_logger(level)
 
 
 def get_variant(variant: str) -> GameVariant:
