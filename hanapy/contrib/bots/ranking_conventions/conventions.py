@@ -74,6 +74,13 @@ class ClassifyClue(RankingConvention):
 
 
 class Chop2IsSave(RankingConvention):
+    def score_clue(self, view: RankingConventionsView, clue: Clue) -> float:
+        if clue.number != 2:
+            return 0
+        if view.chop(clue.to_player) in clue.get_touched(view.view.cards[clue.to_player]):
+            return 500 + 50
+        return 0
+
     def observe(self, view: RankingConventionsView, update: StateUpdate):
         clue = update.clue
         if clue is None:
