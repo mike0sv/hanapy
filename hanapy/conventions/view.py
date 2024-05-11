@@ -98,7 +98,7 @@ class ConventionsView:
         if self.view.state.played.is_obsolete(card, self.view.config.cards.max_number):
             return False
         if self.view.config.cards.counts[card.number] == 1:
-            return True  # ???
+            return False  # ???
         discarded = len([c for c in self.view.state.discarded.cards if c == card])
         if discarded + 1 == self.view.config.cards.counts[card.number]:
             return True
