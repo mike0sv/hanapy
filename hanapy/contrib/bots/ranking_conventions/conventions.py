@@ -219,6 +219,17 @@ class NoPlayClueOnPlayClued(RankingConvention):
         return 0
 
 
+class NoPlayWrong(RankingConvention):
+    def score_play(self, view: RankingConventionsView, card: int) -> float:
+        card_info = view.view.my_cards[card]
+        played = view.view.state.played
+        if played.is_obsolete(card_info, view.view.config.cards.max_number):
+            return -1000
+        if all(not played.is_valid_play(card) for card in card_info.iter_possible()):
+            return -1000
+        return 0
+
+
 # DEFAULT_CONVENTIONS = [ClassifyClue(), DiscardFromChop(), ClueUnplayable()]
 
 DEFAULT_CONVENTIONS = [

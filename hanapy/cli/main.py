@@ -3,10 +3,11 @@ from functools import wraps
 from typing import List, Optional
 
 import typer
-from typer import Option, Typer
+from typer import Argument, Option, Typer
 
 from hanapy.cli.utils import get_player, get_variant, setup_debug
 from hanapy.players.console.player import ConsolePlayerActor, print_player_view_callback, wait_input_callback
+from hanapy.players.scripted import ScriptedGameConfig
 from hanapy.runtime.asyncio import AsyncClient, AsyncServer
 from hanapy.runtime.base import DEFAULT_HOST, DEFAULT_PORT
 from hanapy.runtime.buffers import EventWaitAborted
@@ -26,7 +27,7 @@ def run_async(func):
     return wrapper
 
 
-@app.command()
+@app.command("play")
 @run_async
 async def play(
     name: str = Option(),
@@ -56,6 +57,27 @@ async def play(
         await player_proxy.run(is_host=serve, auto_start_players=auto_start_players)
     except EventWaitAborted:
         print("exiting")
+
+
+@app.command("replay")
+@run_async
+async def replay_script(
+    script_file: str = Argument(),
+    debug: bool = Option(False, "-d"),
+    pause: bool = Option(False),
+):
+    await setup_debug(debug)
+    script = ScriptedGameConfig.from_yaml(script_file)
+    game_variant = get_variant(script.variant)
+    player_actors = [p.to_player() for p in script.players]
+
+    game = game_variant(player_actors, script.seed)
+    loop = game.get_loop()
+
+    await loop.run(
+        turn_begin_callback=print_player_view_callback if pause else None,
+        turn_end_callback=wait_input_callback if pause else None,
+    )
 
 
 @app.command("local")

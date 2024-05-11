@@ -119,7 +119,7 @@ class ClueActionCommand(ActionCommand[Clue]):
         return ClueAction(player=view.me, clue=params)
 
 
-class CardNumAction(ActionCommand[int]):
+class CardNumAction(ActionCommand[int], ABC):
     arg_count = 1
     arg_help = "<position>"
 
