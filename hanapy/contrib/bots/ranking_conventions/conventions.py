@@ -90,6 +90,8 @@ class Chop2IsSave(RankingConvention):
         focus = view.get_clue_focus(clue)
         if focus != view.chop(clue.to_player):
             return
+        if view.view.state.clued[clue.to_player][focus].is_touched:
+            return
         logger.debug("[%s] %s is save clue for 2 in chop", view.me, clue)
         view.clue_type_cell.set_save(clue.to_player, focus)
 

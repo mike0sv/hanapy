@@ -3,15 +3,18 @@ import logging
 from logging.handlers import QueueHandler, QueueListener
 from queue import Queue
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 
 async def _init_logger(level=logging.CRITICAL):
-    # logging.basicConfig(level=level)
     log = logging.getLogger()
     log.setLevel(level)
     que: Queue = Queue()
     log.addHandler(QueueHandler(que))
-    log.setLevel(logging.DEBUG)
-    listener = QueueListener(que, logging.StreamHandler())
+
+    handler = RichHandler(console=Console(stderr=True), show_time=False)
+    listener = QueueListener(que, handler)
     try:
         listener.start()
         while True:

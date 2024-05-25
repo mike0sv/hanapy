@@ -48,22 +48,29 @@ class PlayerView(Struct):
     def my_cards(self) -> List[CardInfo]:
         return self.state.clued[self.me]
 
-    def get_all_seen_cards(self) -> SeenCards:
+    def get_all_seen_cards(self, except_player: int) -> SeenCards:
         result: Counter[Card] = self.state.played.get_all_cards(self.config.cards.colors)
         result.update(self.state.discarded.cards)
         for i, cards in enumerate(self.cards):
-            if i == self.me:
+            if i == self.me or i == except_player:
                 continue
             result.update(cards)
         result.update(c.as_card() for c in self.my_cards if c.is_known)
+        if except_player > 0 and except_player != self.me:
+            result.update(c.as_card() for c in self.state.clued[except_player] if c.is_known)
         return result
 
     def refresh_card_info(self):
-        seen_cards = self.get_all_seen_cards()
+        while any(self.refresh_player_card_info(p) for p in range(self.config.player_count)):
+            continue
+
+    def refresh_player_card_info(self, player: int) -> bool:
+        seen_cards = self.get_all_seen_cards(except_player=player)
         cant_have: Set[Card] = {
             card for card, count in seen_cards.items() if self.config.cards.counts[card.number] == count
         }
-        for card_info in self.my_cards:
+        changed = False
+        for card_info in self.state.clued[player]:
             if card_info.is_known:
                 continue
             for color in list(card_info.colors):
@@ -71,11 +78,14 @@ class PlayerView(Struct):
                 # if all impossible get clue
                 if possible.intersection(cant_have) == possible:
                     card_info.colors.discard(color)
+                    changed = True
             for number in list(card_info.numbers):
                 possible = {Card(color, number) for color in card_info.colors}
                 # if all impossible get clue
                 if possible.intersection(cant_have) == possible:
                     card_info.numbers.discard(number)
+                    changed = True
+        return changed
 
     @property
     def can_discard(self) -> bool:

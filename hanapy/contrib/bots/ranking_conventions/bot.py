@@ -2,8 +2,6 @@ import logging
 from functools import partial
 from typing import List, Optional
 
-from rich import print
-
 from hanapy.contrib.bots import ranking_conventions
 from hanapy.contrib.bots.base import BaseBotPlayer
 from hanapy.contrib.bots.ranking_conventions.conventions import (
@@ -67,7 +65,9 @@ class RankingConventionsBotPlayer(BaseBotPlayer):
         sorted_actions = sorted(possible_actions, key=lambda x: (-x.score, str(x.action)))
         if self.log:
             for action_score in sorted_actions:
-                print(action_score.action, action_score.score, action_score.get_detailed_repr())
+                logger.debug(
+                    "[%s] %s %s %s", view.me, action_score.action, action_score.score, action_score.get_detailed_repr()
+                )
         logger.debug("[%s] Best action: %s", view.me, sorted_actions[0].action)
         return sorted_actions[0].action
 
