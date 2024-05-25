@@ -141,6 +141,9 @@ class Action(PolyStruct):
     def to_update(self, game_data: "GameData") -> StateUpdate:
         raise NotImplementedError(self.__class__.__name__)
 
+    def as_command(self) -> str:
+        raise NotImplementedError
+
 
 class DiscardAction(Action):
     __typename__: ClassVar = "discard"
@@ -158,6 +161,9 @@ class DiscardAction(Action):
 
     def __str__(self):
         return f"ActionDiscard[{self.card}]"
+
+    def as_command(self) -> str:
+        return f"discard {self.card + 1}"
 
 
 class PlayAction(Action):
@@ -179,6 +185,9 @@ class PlayAction(Action):
     def __str__(self):
         return f"ActionPlay[{self.card}]"
 
+    def as_command(self) -> str:
+        return f"play {self.card + 1}"
+
 
 class ClueAction(Action):
     __typename__: ClassVar = "clue"
@@ -194,3 +203,6 @@ class ClueAction(Action):
 
     def __str__(self):
         return f"Action{self.clue}"
+
+    def as_command(self) -> str:
+        return f"clue {self.clue.to_player} {self.clue.number or self.clue.color.char}"  # type: ignore[union-attr]

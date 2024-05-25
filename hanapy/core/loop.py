@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os.path
 import shutil
+import warnings
 from copy import deepcopy
 from typing import Awaitable, Callable, List, Optional, Sequence
 
@@ -110,8 +111,10 @@ class GameLoop:
             if turn_end_callback is not None:
                 await turn_end_callback(self.data)
 
-    def save_logs(self, log_file: str):
+    def save_logs(self, log_file: str, as_script: bool, variant, seed, players):
         if log_file.endswith(os.path.sep):
+            if as_script:
+                warnings.warn("cant save logs as script to directory. specify file", stacklevel=1)
             if os.path.exists(log_file):
                 shutil.rmtree(log_file)
             os.makedirs(log_file, exist_ok=True)
@@ -119,5 +122,10 @@ class GameLoop:
                 with open(os.path.join(log_file, f"{i}.json"), "wb") as f:
                     f.write(msgspec.json.format(dumps(log), indent=2))
         else:
-            with open(log_file, "wb") as f:
-                f.write(msgspec.json.format(dumps(self.logs), indent=2))
+            if as_script:
+                from hanapy.players.scripted import ScriptedGameConfig
+
+                ScriptedGameConfig.from_logs(variant, seed, players, self.logs).write(log_file)
+            else:
+                with open(log_file, "wb") as f:
+                    f.write(msgspec.json.format(dumps(self.logs), indent=2))

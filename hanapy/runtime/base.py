@@ -82,7 +82,7 @@ class HanapyServer(HanapyBase):
         loop = game.get_loop()
         await loop.run()
         if log_file is not None:
-            loop.save_logs(log_file)
+            loop.save_logs(log_file, False, "", "", "")  # todo
 
     async def start(
         self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed, log_file: Optional[str]

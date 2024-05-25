@@ -13,7 +13,7 @@ async def _init_logger(level=logging.CRITICAL):
     que: Queue = Queue()
     log.addHandler(QueueHandler(que))
 
-    handler = RichHandler(console=Console(stderr=True), show_time=False)
+    handler = RichHandler(console=Console(stderr=True), show_path=False, show_time=False)
     listener = QueueListener(que, handler)
     try:
         listener.start()

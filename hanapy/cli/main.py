@@ -89,6 +89,7 @@ async def play_local(
     players: List[str] = Option(..., "-p", "--player"),  # noqa: B008
     pause: bool = Option(False),
     log: Optional[str] = Option(None, "-l", "--log"),
+    log_as_script: bool = Option(False, "--as-script"),
 ):
     await setup_debug(debug)
     game_variant = get_variant(variant)
@@ -104,7 +105,7 @@ async def play_local(
         turn_end_callback=wait_input_callback if pause else None,
     )
     if log is not None:
-        loop.save_logs(log)
+        loop.save_logs(log, log_as_script, variant, seed, players)
 
 
 def main():
