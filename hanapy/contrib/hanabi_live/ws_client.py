@@ -6,7 +6,7 @@ from typing import Any, Awaitable, Callable, List, Optional, Tuple, Type
 import requests.utils
 import websockets
 
-from hanapy.contrib.hanabi_live.models import CommandData, GameActionListMessage, HLModel, Options
+from hanapy.contrib.hanabi_live.models import CommandData, GameActionListMessage, HLModel, Options, TableMessage
 from hanapy.utils.log import init_logger
 from hanapy.utils.ser import dumps, loads
 
@@ -28,7 +28,6 @@ def get_access_token(username, password, server_address, ssl):
 
 async def on_message_print(message_type: str, data: Msg, send: Callable):
     logger.info(f"< {message_type} {data}")
-    # await send("222", {"pong": 222})
 
 
 class WsClient:
@@ -135,6 +134,10 @@ async def on_table_start(data: Msg, send: Send):
     print(table_id, replay)
 
 
+async def on_table(data: TableMessage, send: Send):
+    pass
+
+
 # high level game state info request
 async def get_game_info_1(table_id: int, send: Send):
     await send("getGameInfo1", CommandData(tableID=table_id))
@@ -157,6 +160,7 @@ async def main():
             ("tableList", None, on_table_list),
             ("user", None, on_user),
             ("gameActionList", None, on_game_actions_list),
+            ("table", None, on_table),
         ]
     )
     client = WsClient(username="kek1", password="123", address="127.0.0.1:9000", on_message=msg_handler.on_message)  # noqa: S106
