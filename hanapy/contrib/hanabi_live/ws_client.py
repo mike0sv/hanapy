@@ -1,18 +1,18 @@
 import asyncio
 import json
 import logging
-from typing import Any, Awaitable, Callable, List, Optional, Tuple, Type, Union
+from typing import Any, Awaitable, Callable, List, Optional, Tuple, Type
 
 import requests.utils
 import websockets
 
-from hanapy.contrib.hanabi_live.models import CommandData, HLModel, Options, GameActionListMessage
+from hanapy.contrib.hanabi_live.models import CommandData, GameActionListMessage, HLModel, Options
 from hanapy.utils.log import init_logger
 from hanapy.utils.ser import dumps, loads
 
 logger = logging.getLogger(__name__)
 
-Msg = Union[list, dict, HLModel]
+Msg = dict  # Union[list, dict, HLModel]
 Send = Callable[[str, HLModel], Awaitable[Any]]
 
 
@@ -116,7 +116,7 @@ async def say_text(send: Send, msg: str, room: str):
     await send("chat", CommandData(msg="Hi", room="lobby"))
 
 
-async def table_start(send: Send, table_id: int, indented_players: [str]):
+async def table_start(send: Send, table_id: int, indented_players: List[str]):
     await send("tableStart", CommandData(tableID=table_id, intendedPlayers=indented_players))
 
 
@@ -126,13 +126,13 @@ async def join_table(send: Send, table_id: int):
 
 async def on_user(data: Msg, send: Send):
     table_id = data.get("tableID")
-    pass
+    print(table_id)
 
 
 async def on_table_start(data: Msg, send: Send):
     table_id = data.get("tableID")
     replay = data.get("replay")
-    pass
+    print(table_id, replay)
 
 
 # high level game state info request
@@ -151,12 +151,14 @@ async def on_game_actions_list(data: GameActionListMessage, send: Send):
 
 async def main():
     await init_logger(logging.INFO)
-    msg_handler = MessageHandler(handlers=[
-        (None, None, on_message_print),
-        ("tableList", None, on_table_list),
-        ("user", None, on_user),
-        ("gameActionList", None, on_game_actions_list),
-    ])
+    msg_handler = MessageHandler(
+        handlers=[
+            (None, None, on_message_print),
+            ("tableList", None, on_table_list),
+            ("user", None, on_user),
+            ("gameActionList", None, on_game_actions_list),
+        ]
+    )
     client = WsClient(username="kek1", password="123", address="127.0.0.1:9000", on_message=msg_handler.on_message)  # noqa: S106
     await client.start()
 
