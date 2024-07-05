@@ -116,9 +116,47 @@ async def say_text(send: Send, msg: str, room: str):
     await send("chat", CommandData(msg="Hi", room="lobby"))
 
 
+async def table_start(send: Send, table_id: int, indented_players: [str]):
+    await send("tableStart", CommandData(tableID=table_id, intendedPlayers=indented_players))
+
+
+async def join_table(send: Send, table_id: int):
+    await send("tableJoin", CommandData(tableID=table_id))
+
+
+async def on_user(data: Msg, send: Send):
+    table_id = data.get("tableID")
+    pass
+
+
+async def on_table_start(data: Msg, send: Send):
+    table_id = data.get("tableID")
+    replay = data.get("replay")
+    pass
+
+
+# high level game state info request
+async def get_game_info_1(table_id: int, send: Send):
+    await send("getGameInfo1", CommandData(tableID=table_id))
+
+
+# request all actions played so far
+async def get_game_info_2(table_id: int, send: Send):
+    await send("getGameInfo2", CommandData(tableID=table_id))
+
+
+async def on_game_actions_list(data: Msg, send: Send):
+    pass
+
+
 async def main():
     await init_logger(logging.INFO)
-    msg_handler = MessageHandler(handlers=[(None, None, on_message_print), ("tableList", None, on_table_list)])
+    msg_handler = MessageHandler(handlers=[
+        (None, None, on_message_print),
+        ("tableList", None, on_table_list),
+        ("user", None, on_user),
+        ("gameActionList", None, on_user),
+    ])
     client = WsClient(username="kek1", password="123", address="127.0.0.1:9000", on_message=msg_handler.on_message)  # noqa: S106
     await client.start()
 

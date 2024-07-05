@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 
 SRC_PATH = os.path.join("server", "src")
-struct_pattern = re.compile(r"type\s+(\w+)\s+struct\s+\{((.|\n)*?)}")
-field_pattern = re.compile(r"\s*(\w*)\s*\*?(\[])*(\w*.?\w*)\s*`json:\"(\w*|-)(,.*)?\"`.*")
+struct_pattern = re.compile(r"type\s+(\w+)\s+struct\s+\{((.|\n)*?)[^{]}")
+field_pattern = re.compile(r"\s*(\w*)\s*\*?(\[])*(\w*.?\w*)(\{})?\s*`json:\"(\w*|-)(,.*)?\"`.*")
+# field_pattern = re.compile(r"\s*(\w*)\s*\*?(\[])*(\w*.?\w*)(\{})?\s*`json:\"(\w*|-)(,.*)?\"`.*")
 STRUCT_FILTER = {
     "TableMessage",
     "Options",
@@ -18,6 +19,8 @@ STRUCT_FILTER = {
     "GameAction",
     "OptionsJSON",
     "CharacterAssignment",
+    "GameActionListMessage",
+
 }
 
 STRUCT_TEMPLATE = """
@@ -26,7 +29,7 @@ class {name}(HLModel):
 
 FIELD_TEMPLATE = "    {name}: Optional[{type}] = None"
 
-TYPE_MAPPING = {"uint64": "int", "int": "int", "string": "str", "bool": "bool"}
+TYPE_MAPPING = {"uint64": "int", "int": "int", "string": "str", "bool": "bool", "interface": "Any"}
 
 
 def iter_structs(path: str) -> Iterable[Tuple[str, List[str]]]:
@@ -44,7 +47,8 @@ def parse_field_line(line: str) -> Tuple[Optional[str], Optional[str]]:
     match = field_pattern.match(line)
     if match is None:
         raise ValueError(f"Cannot parse line '{line}'")
-    name, array, type_, alias, omit = match.groups()
+    # name, array, type_, alias, omit = match.groups()
+    name, array, type_, braces, alias, omit = match.groups()
     if alias == "-":
         return None, None
     type_ = type_.lstrip("*").strip()
@@ -79,7 +83,7 @@ def create_models(path: str, out: str):
         structs.append(struct_to_python(name, lines))
 
     with open(out, "w", encoding="utf8") as f:
-        f.write("# ruff: noqa: A003\nfrom typing import List, Optional\nfrom msgspec import Struct\n\n\n")
+        f.write("# ruff: noqa: A003\nfrom typing import List, Optional, Any\nfrom msgspec import Struct\n\n\n")
         f.write("class HLModel(Struct):\n    pass\n\n")
         f.write("\n\n".join(structs))
         f.write("\n")

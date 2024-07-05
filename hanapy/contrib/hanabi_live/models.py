@@ -1,6 +1,5 @@
 # ruff: noqa: A003
-from typing import List, Optional
-
+from typing import List, Optional, Any
 from msgspec import Struct
 
 
@@ -130,3 +129,8 @@ class GameAction(HLModel):
     type: Optional[int] = None
     target: Optional[int] = None
     value: Optional[int] = None
+
+
+class GameActionListMessage(HLModel):
+    tableID: Optional[int] = None
+    list: Optional[List[Any]] = None
