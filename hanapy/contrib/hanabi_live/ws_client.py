@@ -1,16 +1,19 @@
 import asyncio
 import json
 import logging
-from typing import Callable, List, Optional, Tuple, Type
+from typing import Any, Awaitable, Callable, List, Optional, Tuple, Type, Union
 
 import requests.utils
 import websockets
 
-from hanapy.contrib.hanabi_live.models import HLModel
+from hanapy.contrib.hanabi_live.models import CommandData, HLModel, Options
 from hanapy.utils.log import init_logger
 from hanapy.utils.ser import dumps, loads
 
 logger = logging.getLogger(__name__)
+
+Msg = Union[list, dict, HLModel]
+Send = Callable[[str, HLModel], Awaitable[Any]]
 
 
 def get_access_token(username, password, server_address, ssl):
@@ -23,9 +26,9 @@ def get_access_token(username, password, server_address, ssl):
     return cookies.get("hanabi.sid", None)
 
 
-async def on_message_print(message_type: str, data: dict, send: Callable):
-    logger.debug(f"< {message_type} {json.dumps(data, indent=2)}")
-    await send("222", {"pong": 222})
+async def on_message_print(message_type: str, data: Msg, send: Callable):
+    logger.info(f"< {message_type} {data}")
+    # await send("222", {"pong": 222})
 
 
 class WsClient:
@@ -40,7 +43,10 @@ class WsClient:
     async def send(self, message_type: str, data: HLModel):
         if self.websocket is None:
             raise ValueError("WS is not connected")
-        await self.websocket.send(f"{message_type} {dumps(data)}")
+
+        payload = dumps(data).decode("utf8")
+        logger.info(f"> {message_type} {payload}")
+        await self.websocket.send(f"{message_type} {payload}")
 
     async def start(self):
         logger.debug("logging in...")
@@ -64,7 +70,7 @@ class MessageHandler:
     def __init__(self, handlers: List[Tuple[Optional[str], Optional[Type[HLModel]], Callable]]):
         self.handlers = handlers
 
-    async def on_message(self, message_type: str, data: dict, send: Callable):
+    async def on_message(self, message_type: str, data: Msg, send: Callable):
         for type_, model, callback in self.handlers:
             if type_ is not None and message_type != type_:
                 continue
@@ -72,13 +78,47 @@ class MessageHandler:
             await callback(message_type, msg, send)
 
 
-async def main():
-    await init_logger(logging.DEBUG)
-    msg_handler = MessageHandler(
-        handlers=[
-            (None, None, on_message_print),
-        ]
+async def on_table_list(message_type: str, data: Msg, send: Send):
+    assert isinstance(data, list)
+    if len(data) > 0:
+        return
+
+    await create_table(send, "bots only")
+    # send("setting", CommandData(name="createTableMaxPlayers"))
+
+
+async def create_table(send: Send, table_name: str):
+    await send(
+        "tableCreate",
+        CommandData(
+            name=table_name,
+            options=Options(
+                variantName="No Variant",
+                timed=False,
+                timeBase=0,
+                timePerTurn=0,
+                speedrun=False,
+                cardCycle=False,
+                deckPlays=False,
+                emptyClues=False,
+                oneExtraCard=False,
+                oneLessCard=False,
+                allOrNothing=False,
+                detrimentalCharacters=False,
+            ),
+            password="",
+            maxPlayers=5,
+        ),
     )
+
+
+async def say_text(send: Send, msg: str, room: str):
+    await send("chat", CommandData(msg="Hi", room="lobby"))
+
+
+async def main():
+    await init_logger(logging.INFO)
+    msg_handler = MessageHandler(handlers=[(None, None, on_message_print), ("tableList", None, on_table_list)])
     client = WsClient(username="kek1", password="123", address="127.0.0.1:9000", on_message=msg_handler.on_message)  # noqa: S106
     await client.start()
 

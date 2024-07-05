@@ -7,16 +7,26 @@ from typing import Iterable, List, Optional, Tuple
 
 SRC_PATH = os.path.join("server", "src")
 struct_pattern = re.compile(r"type\s+(\w+)\s+struct\s+\{((.|\n)*?)}")
-field_pattern = re.compile(r"\s*(\w*)\s*(\[])?(\*?\w*.?\w*)\s*`json:\"(\w*|-)(,.*)?\"`.*")
-STRUCT_FILTER = {"TableMessage", "Options", "Spectator"}
+field_pattern = re.compile(r"\s*(\w*)\s*\*?(\[])*(\w*.?\w*)\s*`json:\"(\w*|-)(,.*)?\"`.*")
+STRUCT_FILTER = {
+    "TableMessage",
+    "Options",
+    "Spectator",
+    "CommandData",
+    "GameJSON",
+    "CardIdentity",
+    "GameAction",
+    "OptionsJSON",
+    "CharacterAssignment",
+}
 
 STRUCT_TEMPLATE = """
 class {name}(HLModel):
 {fields}"""
 
-FIELD_TEMPLATE = "    {name}: {type}"
+FIELD_TEMPLATE = "    {name}: Optional[{type}] = None"
 
-TYPE_MAPPING = {"uint64": "int", "int": "int", "string": "str"}
+TYPE_MAPPING = {"uint64": "int", "int": "int", "string": "str", "bool": "bool"}
 
 
 def iter_structs(path: str) -> Iterable[Tuple[str, List[str]]]:
@@ -38,7 +48,11 @@ def parse_field_line(line: str) -> Tuple[Optional[str], Optional[str]]:
     if alias == "-":
         return None, None
     type_ = type_.lstrip("*").strip()
+    add_quotes = type_ not in TYPE_MAPPING
+
     type_ = TYPE_MAPPING.get(type_, type_)
+    if add_quotes:
+        type_ = f'"{type_}"'
     if array == "[]":
         type_ = f"List[{type_}]"
     return alias, type_
@@ -65,7 +79,7 @@ def create_models(path: str, out: str):
         structs.append(struct_to_python(name, lines))
 
     with open(out, "w", encoding="utf8") as f:
-        f.write("# ruff: noqa: A003\nfrom typing import List\nfrom msgspec import Struct\n\n\n")
+        f.write("# ruff: noqa: A003\nfrom typing import List, Optional\nfrom msgspec import Struct\n\n\n")
         f.write("class HLModel(Struct):\n    pass\n\n")
         f.write("\n\n".join(structs))
         f.write("\n")
