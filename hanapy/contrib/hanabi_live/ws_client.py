@@ -23,21 +23,19 @@ def get_access_token(username, password, server_address, ssl):
     cookies = requests.utils.dict_from_cookiejar(response.cookies)
     return cookies.get('hanabi.sid', None)
 
+async def on_message_print(message_type, data, send):
+    logger.debug(f"< {message_type} {json.dumps(data, indent=2)}")
+    await send("222", {"pong": 222})
+
 
 class WsClient(object):
-    def __init__(self, username, password, address, ssl=False):
+    def __init__(self, username, password, address, on_message, ssl=False):
         self.address = address
         self.username = username
         self.password = password
         self.websocket = None
         self.ssl = ssl
-
-    async def on_message(self, message):
-        index = message.find(' ')
-        type_part = message[:index]
-        json_part = message[index + 1:]
-        json_data = json.loads(json_part)
-        logger.debug(f"< {type_part} {json.dumps(json_data, indent=2)}")
+        self.on_message = on_message
 
     async def send(self, message_type, data):
         await self.websocket.send(f'{message_type} {json.dumps(data)}')
@@ -53,11 +51,15 @@ class WsClient(object):
             self.websocket = websocket
             logger.info("connection established")
             async for message in websocket:
-                await self.on_message(message)
+                index = message.find(' ')
+                type_part = message[:index]
+                json_part = message[index + 1:]
+                json_data = json.loads(json_part)
+                await self.on_message(type_part, json_data, self.send)
 
 async def main():
     await init_logger(logging.DEBUG)
-    client = WsClient(username='kek1', password='123', address='127.0.0.1:9000')
+    client = WsClient(username='kek1', password='123', address='127.0.0.1:9000', on_message=on_message_print)
     await client.start()
 
 if __name__ == '__main__':
