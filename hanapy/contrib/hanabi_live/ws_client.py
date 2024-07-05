@@ -3,6 +3,11 @@ import asyncio
 import requests
 import websockets
 import json
+import logging
+
+from hanapy.utils.log import init_logger
+
+logger = logging.getLogger(__name__)
 
 
 def get_access_token(username, password, server_address):
@@ -30,23 +35,25 @@ class WsClient(object):
         type_part = message[:index]
         json_part = message[index + 1:]
         json_data = json.loads(json_part)
-        print(f"< {type_part} {json.dumps(json_data, indent=2)}")
+        logger.debug(f"< {type_part} {json.dumps(json_data, indent=2)}")
 
     async def send(self, message_type, data):
         await self.websocket.send(f'{message_type} {json.dumps(data)}')
 
     async def start(self):
+        logger.debug("logging in...")
         token = get_access_token(self.username, self.password, self.address)
+        logger.debug("authentication ok")
         uri = f"ws://{self.address}/ws"
+        logger.debug(f"connecting to websocket url {uri}")
         async with websockets.connect(uri, extra_headers={'Cookie': f'hanabi.sid={token}'}) as websocket:
             self.websocket = websocket
+            logger.info("connection established")
             async for message in websocket:
-                try:
-                    await self.on_message(message)
-                except json.JSONDecodeError:
-                    print("Received non-JSON message:", message)
+                await self.on_message(message)
 
 async def main():
+    await init_logger(logging.DEBUG)
     client = WsClient(username='kek1', password='123', address='127.0.0.1:9000')
     await client.start()
 
