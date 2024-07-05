@@ -11,7 +11,7 @@ field_pattern = re.compile(r"\s*(\w*)\s*(\[])?(\*?\w*.?\w*)\s*`json:\"(\w*|-)(,.
 STRUCT_FILTER = {"TableMessage", "Options", "Spectator"}
 
 STRUCT_TEMPLATE = """
-class {name}(Struct):
+class {name}(HLModel):
 {fields}"""
 
 FIELD_TEMPLATE = "    {name}: {type}"
@@ -65,7 +65,8 @@ def create_models(path: str, out: str):
         structs.append(struct_to_python(name, lines))
 
     with open(out, "w", encoding="utf8") as f:
-        f.write("from typing import List\nfrom msgspec import Struct\n\n")
+        f.write("# ruff: noqa: A003\nfrom typing import List\nfrom msgspec import Struct\n\n\n")
+        f.write("class HLModel(Struct):\n    pass\n\n")
         f.write("\n\n".join(structs))
         f.write("\n")
 

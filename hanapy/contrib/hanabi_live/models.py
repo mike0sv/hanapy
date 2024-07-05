@@ -4,13 +4,17 @@ from typing import List
 from msgspec import Struct
 
 
-class Spectator(Struct):
+class HLModel(Struct):
+    pass
+
+
+class Spectator(HLModel):
     name: str
     shadowingPlayerIndex: int
     shadowingPlayerUsername: str
 
 
-class Options(Struct):
+class Options(HLModel):
     numPlayers: int
     startingPlayer: int
     variantID: int
@@ -30,7 +34,7 @@ class Options(Struct):
     maxPlayers: int
 
 
-class TableMessage(Struct):
+class TableMessage(HLModel):
     id: int
     name: str
     passwordProtected: bool
