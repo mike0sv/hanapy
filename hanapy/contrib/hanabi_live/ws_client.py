@@ -10,8 +10,9 @@ from hanapy.utils.log import init_logger
 logger = logging.getLogger(__name__)
 
 
-def get_access_token(username, password, server_address):
-    url = f'http://{server_address}/login'
+def get_access_token(username, password, server_address, ssl):
+    schema = "https" if ssl else "http"
+    url = f'{schema}://{server_address}/login'
     data = {
         'username': username,
         'password': password,
@@ -24,11 +25,12 @@ def get_access_token(username, password, server_address):
 
 
 class WsClient(object):
-    def __init__(self, username, password, address):
+    def __init__(self, username, password, address, ssl=False):
         self.address = address
         self.username = username
         self.password = password
         self.websocket = None
+        self.ssl = ssl
 
     async def on_message(self, message):
         index = message.find(' ')
@@ -42,9 +44,10 @@ class WsClient(object):
 
     async def start(self):
         logger.debug("logging in...")
-        token = get_access_token(self.username, self.password, self.address)
+        token = get_access_token(self.username, self.password, self.address, self.ssl)
         logger.debug("authentication ok")
-        uri = f"ws://{self.address}/ws"
+        schema = "wss" if self.ssl else "ws"
+        uri = f"{schema}://{self.address}/ws"
         logger.debug(f"connecting to websocket url {uri}")
         async with websockets.connect(uri, extra_headers={'Cookie': f'hanabi.sid={token}'}) as websocket:
             self.websocket = websocket
