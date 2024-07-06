@@ -116,7 +116,7 @@ class HLHanapyAdapter:
 
     @on("tableList", model=List[TableMessage])
     async def on_table_list(self, _, data: List[TableMessage]):
-        self.tables = data
+        self.tables = [table for table in data if table.name == self.client.namespace]
 
     @on("tableGone", model=TableMessage)
     async def on_table_gone(self, _, data: TableMessage):
@@ -253,6 +253,7 @@ class HLClient(BufferingHanapyClient):
         self,
         username: str,
         password: str,
+        namespace: str,
         address: str,
         is_host: bool,
         ssl: bool = False,
@@ -266,6 +267,7 @@ class HLClient(BufferingHanapyClient):
         self.ssl = ssl
         self.listening = True
         self.adapter = HLHanapyAdapter(self, is_host, username)
+        self.namespace = namespace
 
     @property
     def websocket(self):
@@ -319,17 +321,17 @@ class HLClient(BufferingHanapyClient):
 
 
 async def run_client(
-    username: str, password: str, address: str, is_host: bool, auto_start_players: Optional[int] = None
+    username: str, password: str, namespace: str, address: str, is_host: bool, auto_start_players: Optional[int] = None
 ):
     player = ConsolePlayerActor(username)
 
-    client = HLClient(username, password, address, is_host)
+    client = HLClient(username, password, namespace, address, is_host)
 
     client.add_event_handlers(player.get_event_handlers())
 
     if is_host:
         await client.connect2()
-        await client.adapter.create_table(f"{username}s table")
+        await client.adapter.create_table(namespace)
 
     player_proxy = ClientPlayerProxy(username, client, player)
 
@@ -340,13 +342,14 @@ async def run_client(
 
 
 async def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print(f"usage: python {__file__} name is_host")
         return
-    name, is_host = sys.argv[1:]
+    name, is_host, namespace = sys.argv[1:]
     await init_logger(logging.DEBUG)
     await run_client(
-        username=name,
+        username=f'{namespace}_{name}',
+        namespace=namespace,
         password="123",  # noqa: S106
         address="209.38.252.70",
         is_host=is_host == "1",
