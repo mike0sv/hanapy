@@ -1,5 +1,6 @@
 # ruff: noqa: A003
-from typing import List, Optional, Any
+from typing import Any, List, Optional
+
 from msgspec import Struct
 
 
@@ -89,6 +90,15 @@ class CardIdentity(HLModel):
     rank: Optional[int] = None
 
 
+class UserMessage(HLModel):
+    userID: Optional[int] = None
+    name: Optional[str] = None
+    status: Optional[int] = None
+    tableID: Optional[int] = None
+    hyphenated: Optional[bool] = None
+    inactive: Optional[bool] = None
+
+
 class TableMessage(HLModel):
     id: Optional[int] = None
     name: Optional[str] = None
@@ -107,6 +117,11 @@ class TableMessage(HLModel):
     players: Optional[List[str]] = None
     spectators: Optional[List["Spectator"]] = None
     maxPlayers: Optional[int] = None
+
+
+class TableStartMessage(HLModel):
+    tableID: Optional[int] = None
+    replay: Optional[bool] = None
 
 
 class GameJSON(HLModel):

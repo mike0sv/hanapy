@@ -20,7 +20,8 @@ STRUCT_FILTER = {
     "OptionsJSON",
     "CharacterAssignment",
     "GameActionListMessage",
-
+    "UserMessage",
+    "TableStartMessage",
 }
 
 STRUCT_TEMPLATE = """
