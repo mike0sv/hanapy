@@ -20,7 +20,7 @@ Send = Callable[[str, HLModel], Awaitable[Any]]
 def get_access_token(username, password, server_address, ssl):
     schema = "https" if ssl else "http"
     url = f"{schema}://{server_address}/login"
-    data = {"username": username, "password": password, "version": "6387"}
+    data = {"username": username, "password": password, "version": "5100"}
     response = requests.post(url, data=data, timeout=10)
     response.raise_for_status()
     cookies = requests.utils.dict_from_cookiejar(response.cookies)
@@ -179,7 +179,7 @@ async def main():
             ("table", None, on_table),
         ]
     )
-    client = WsClient(username="kek1", password="123", address="127.0.0.1:9000",
+    client = WsClient(username="kek33", password="123", address="209.38.252.70",
                       on_message=msg_handler.on_message)  # noqa: S106
     await client.start()
 

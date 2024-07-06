@@ -302,7 +302,7 @@ async def main():
     await run_client(
         username=name,
         password="123",  # noqa: S106
-        address="127.0.0.1:9000",
+        address="209.38.252.70",
         is_host=is_host == "1",
         auto_start_players=2,
     )
