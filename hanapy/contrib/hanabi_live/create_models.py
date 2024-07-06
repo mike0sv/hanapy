@@ -24,10 +24,15 @@ STRUCT_FILTER = {
     "TableStartMessage",
     "GameActionMessage",
     "ActionClue",
-    "ActionStrike",
-    "ActionPlay",
+    "ActionCardIdentity",
     "ActionDiscard",
     "ActionDraw",
+    "ActionGameOver",
+    "ActionPlay",
+    "ActionPlayerTimes",
+    "ActionStrike",
+    "ActionStatus",
+    "ActionTurn",
     "Clue",
 }
 

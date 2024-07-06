@@ -1,6 +1,5 @@
 # ruff: noqa: A003
-from typing import Any, List, Optional
-
+from typing import List, Optional, Any
 from msgspec import Struct
 
 
@@ -90,6 +89,14 @@ class CardIdentity(HLModel):
     rank: Optional[int] = None
 
 
+class ActionCardIdentity(HLModel):
+    type: Optional[str] = None
+    playerIndex: Optional[int] = None
+    order: Optional[int] = None
+    suitIndex: Optional[int] = None
+    rank: Optional[int] = None
+
+
 class ActionClue(HLModel):
     type: Optional[str] = None
     clue: Optional["Clue"] = None
@@ -116,6 +123,13 @@ class ActionDraw(HLModel):
     rank: Optional[int] = None
 
 
+class ActionGameOver(HLModel):
+    type: Optional[str] = None
+    endCondition: Optional[int] = None
+    playerIndex: Optional[int] = None
+    votes: Optional[List[int]] = None
+
+
 class ActionPlay(HLModel):
     type: Optional[str] = None
     playerIndex: Optional[int] = None
@@ -124,11 +138,30 @@ class ActionPlay(HLModel):
     rank: Optional[int] = None
 
 
+class ActionPlayerTimes(HLModel):
+    type: Optional[str] = None
+    playerTimes: Optional[List["int64"]] = None
+    duration: Optional["int64"] = None
+
+
 class ActionStrike(HLModel):
     type: Optional[str] = None
     num: Optional[int] = None
     turn: Optional[int] = None
     order: Optional[int] = None
+
+
+class ActionStatus(HLModel):
+    type: Optional[str] = None
+    clues: Optional[int] = None
+    score: Optional[int] = None
+    maxScore: Optional[int] = None
+
+
+class ActionTurn(HLModel):
+    type: Optional[str] = None
+    num: Optional[int] = None
+    currentPlayerIndex: Optional[int] = None
 
 
 class Clue(HLModel):
