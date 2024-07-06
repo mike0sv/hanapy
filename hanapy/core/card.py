@@ -32,12 +32,18 @@ class Card(msgspec.Struct, frozen=True):
     color: Color
     number: int
     clues: int = 0
+    order: Optional[int] = None
 
     def to_str(self, touched: bool, colored: bool = True):
         res = f"{self.number}{self.color.char}"
         if colored:
             res = self.color.paint(res, is_touched=touched)
         return res
+
+    def __eq__(self, other):
+        if not isinstance(other, Card):
+            return False
+        return self.color == other.color and self.number == other.number
 
 
 class Clue(msgspec.Struct):
@@ -87,6 +93,7 @@ class CardInfo(msgspec.Struct):
     colors: OrderedSet[Color]
     numbers: OrderedSet[int]
     is_touched: bool
+    order: Optional[int] = None
 
     @property
     def number(self) -> Optional[int]:
@@ -105,11 +112,12 @@ class CardInfo(msgspec.Struct):
         return self.color is not None and self.number is not None
 
     @classmethod
-    def create(cls, card_config: "CardConfig"):
+    def create(cls, card_config: "CardConfig", *, order: Optional[int] = None):
         return CardInfo(
             colors=OrderedSet(card_config.colors),
             numbers=OrderedSet(range(1, card_config.max_number + 1)),
             is_touched=False,
+            order=order,
         )
 
     def to_str(self):

@@ -343,12 +343,12 @@ async def run_client(
 
 async def main():
     if len(sys.argv) != 4:
-        print(f"usage: python {__file__} name is_host")
+        print(f"usage: python {__file__} name is_host namespace")
         return
     name, is_host, namespace = sys.argv[1:]
     await init_logger(logging.DEBUG)
     await run_client(
-        username=f'{namespace}_{name}',
+        username=f"{namespace}_{name}",
         namespace=namespace,
         password="123",  # noqa: S106
         address="209.38.252.70",

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from hanapy.contrib.hanabi_live.actions import HLAction
+from hanapy.core.card import CluedCards
 from hanapy.core.config import GameConfig, GameState
 from hanapy.core.player import PlayerMemo, PlayerView
 
@@ -53,6 +54,8 @@ class HLGameState:
             cards=[[] for _ in range(self.config.player_count)],
             state=GameState.create(self.config, self.deck_size),
         )
+        # cleat clued cards, they will be filled by draw actions with correct order
+        self.player_view.state.clued = CluedCards.create(self.config.player_count, 0, self.config.cards)
 
     def apply_action(self, action: HLAction):
         action.apply(self.player_view)

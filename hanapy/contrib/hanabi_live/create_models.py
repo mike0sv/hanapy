@@ -108,7 +108,7 @@ def create_models(path: str, out: str):
         f.write(
             "# ruff: noqa: A003\nfrom typing import List, Optional, Any\nfrom msgspec import Struct\n\nimport datetime\n\n"
         )
-        f.write("class HLModel(Struct):\n    pass\n\n")
+        f.write("class HLModel(Struct, omit_defaults=True):\n    pass\n\n")
         f.write("\n\n".join(structs))
         f.write("\n")
 

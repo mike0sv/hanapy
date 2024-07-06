@@ -5,7 +5,7 @@ from typing import Any, List, Optional
 from msgspec import Struct
 
 
-class HLModel(Struct):
+class HLModel(Struct, omit_defaults=True):
     pass
 
 
