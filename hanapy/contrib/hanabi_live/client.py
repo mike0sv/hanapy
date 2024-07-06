@@ -161,6 +161,7 @@ class HLHanapyAdapter:
         try:
             _handlers[message_type].append((_handler, model))
             yield
+            logger.info(f"waiting for {message_type}")
             await done.wait()
         finally:
             _handlers[message_type].remove((_handler, model))
@@ -196,7 +197,8 @@ class HLHanapyAdapter:
             return
         logger.info("table started")
         self.started = True
-        await self.client.send_message("getGameInfo1", CommandData(tableID=self._table_id))
+        async with self.wait_for_message("init", self.log):
+            await self.client.send_message("getGameInfo1", CommandData(tableID=self._table_id))
         async with self.wait_for_message("gameActionList", self.parse_actions_list, GameActionListMessage):
             await self.client.send_message("getGameInfo2", CommandData(tableID=self._table_id))
         await self.client.receive_event(GameStartedEvent(pid=self.pid, view=self.game_state.get_player_view()))
