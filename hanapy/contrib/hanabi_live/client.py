@@ -7,6 +7,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Type, 
 
 import websockets
 
+from hanapy.contrib.hanabi_live.actions import HLAction
 from hanapy.contrib.hanabi_live.models import (
     CommandData,
     GameActionListMessage,
@@ -15,8 +16,8 @@ from hanapy.contrib.hanabi_live.models import (
     TableStartMessage,
     UserMessage,
 )
+from hanapy.contrib.hanabi_live.state import HLGameState
 from hanapy.contrib.hanabi_live.ws_client import Msg, create_table, get_access_token, join_table, table_start
-from hanapy.core.player import PlayerView
 from hanapy.players.console.player import ConsolePlayerActor
 from hanapy.runtime.asyncio import get_event_loop
 from hanapy.runtime.buffers import BufferingHanapyClient, EventWaitAborted
@@ -42,14 +43,6 @@ def on(*message_types: Union[str, Type[Event]], model: Optional[Type] = None):
     return dec
 
 
-class HLGameState:
-    def apply_action(self, action):
-        print("applied", action)
-
-    def get_player_view(self) -> PlayerView:
-        raise NotImplementedError("no player view yet")
-
-
 class HLHanapyAdapter:
     def __init__(self, client: "HLClient", is_host: bool, pid: str):
         self.client = client
@@ -58,7 +51,7 @@ class HLHanapyAdapter:
         self.tables: List[TableMessage] = []
         self.players: List[str] = []
         self.started = False
-        self.game_state = HLGameState()
+        self.game_state = HLGameState(name=pid)
         self.pid = pid
 
     @property
@@ -185,11 +178,11 @@ class HLHanapyAdapter:
     async def parse_actions_list(self, _, data: GameActionListMessage):
         assert data.list is not None
         for action in data.list:
-            self.game_state.apply_action(action)
+            self.game_state.apply_action(HLAction.from_action_data(action))
 
     @on("action")
     async def on_action(self, _, data):
-        self.game_state.apply_action(data)
+        self.game_state.apply_action(HLAction.from_action_data(data))
 
     @on("tableStart", model=TableStartMessage)
     async def on_table_start(self, _, data: TableStartMessage):
