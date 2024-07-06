@@ -1,7 +1,7 @@
 import random
 from typing import Optional, Sequence
 
-from hanapy.core.card import Card, Color
+from hanapy.core.card import Color, Card2
 from hanapy.core.config import CardConfig, GameConfig
 from hanapy.core.deck import Deck, DeckGenerator
 from hanapy.core.loop import BaseGame, GameLoop
@@ -24,13 +24,15 @@ class ClassicDeckGenerator(DeckGenerator):
         cards = []
         for col in config.colors:
             for num, count in config.counts.items():
-                cards.extend([Card(col, num)] * count)
+                cards.extend([Card2(col, num)] * count)
 
         if self.random_state is not None:
             random.seed(self.random_state)
         random.shuffle(
             cards,
         )
+        for i in range(len(cards)):
+            cards[i].order = i
         return Deck(cards=cards)
 
 

@@ -31,6 +31,18 @@ class Color(msgspec.Struct, frozen=True):
 class Card(msgspec.Struct, frozen=True):
     color: Color
     number: int
+    clues: int = 0
+
+    def to_str(self, touched: bool, colored: bool = True):
+        res = f"{self.number}{self.color.char}"
+        if colored:
+            res = self.color.paint(res, is_touched=touched)
+        return res
+
+
+class Card2(msgspec.Struct, frozen=True):
+    color: Color
+    number: int
     order: int
     clues: int = 0
 
@@ -124,10 +136,12 @@ class CardInfo(msgspec.Struct):
         return res
 
     @overload
-    def as_card(self, force: Literal[True] = True) -> Card: ...
+    def as_card(self, force: Literal[True] = True) -> Card:
+        ...
 
     @overload
-    def as_card(self, force: Literal[False] = False) -> Optional[Card]: ...
+    def as_card(self, force: Literal[False] = False) -> Optional[Card]:
+        ...
 
     def as_card(self, force: bool = False) -> Optional[Card]:
         if self.color is not None and self.number is not None:

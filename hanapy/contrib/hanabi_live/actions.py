@@ -10,7 +10,7 @@ from hanapy.contrib.hanabi_live.models import (
     CommandData,
 )
 from hanapy.core.action import Action, ClueAction
-from hanapy.core.card import Card, Color
+from hanapy.core.card import Card, Color, Card2
 from hanapy.core.player import PlayerView
 
 _Action = Union[ActionStrike, ActionDraw, ActionPlay, ActionDiscard, ActionClue]
@@ -44,12 +44,14 @@ class HLActionDraw(HLAction[ActionDraw]):
         assert self.action.playerIndex is not None
         player_view.cards[self.action.playerIndex].insert(0, self.get_card(player_view))
 
-    def get_card(self, player_view: PlayerView) -> Card:
+    def get_card(self, player_view: PlayerView) -> Card2:
         assert self.action.rank is not None
         assert self.action.suitIndex is not None
-        return Card(
+        assert self.action.order is not None
+        return Card2(
             number=self.action.rank,
             color=Color.parse(suite_index_color_mapping[self.action.suitIndex], player_view.config.cards.colors),
+            order=self.action.order,
         )
 
 

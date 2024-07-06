@@ -5,11 +5,11 @@ from typing import Dict, List, Optional, Tuple
 
 from hanapy.conventions.cells import ClueTypeCell, EarlyGameCell
 from hanapy.core.action import ClueResult, PlayerPosCard
-from hanapy.core.card import Card, CardInfo, Clue, Color
+from hanapy.core.card import Card, CardInfo, Clue, Color, Card2
 from hanapy.core.player import PlayerView
 
 NO_CHOP = -999
-NO_CARD = Card(number=-999, color=Color(char=""))
+NO_CARD = Card2(number=-999, color=Color(char=""), order=None)
 
 
 def observing_only(f):

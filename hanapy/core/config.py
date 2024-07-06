@@ -2,19 +2,19 @@ from typing import Dict, List, Union
 
 from msgspec import Struct
 
-from hanapy.core.card import Card, CardInfo, CluedCards, Color
+from hanapy.core.card import Card, CardInfo, CluedCards, Color, Card2
 from hanapy.types import SeenCards
 
 
 class PlayedCards(Struct):
-    cards: Dict[str, List[Card]]
+    cards: Dict[str, List[Card2]]
 
     @classmethod
     def empty(cls, colors: List[Color]):
         return PlayedCards(cards={c.char: [] for c in colors})
 
-    def is_valid_play(self, card: Union[Card, CardInfo]) -> bool:
-        if isinstance(card, Card):
+    def is_valid_play(self, card: Union[Card2, CardInfo]) -> bool:
+        if isinstance(card, Card2):
             return card.number - 1 == len(self.cards[card.color.char])
         as_card = card.as_card()
         if as_card is not None:
@@ -23,8 +23,8 @@ class PlayedCards(Struct):
             return all(card.number - 1 == len(stack) for stack in self.cards.values())
         return False
 
-    def is_obsolete(self, card: Union[Card, CardInfo], max_number: int) -> bool:
-        if isinstance(card, Card):
+    def is_obsolete(self, card: Union[Card2, CardInfo], max_number: int) -> bool:
+        if isinstance(card, Card2):
             return card.number <= len(self.cards[card.color.char])
         as_card = card.as_card()
         if as_card is not None:
@@ -36,7 +36,7 @@ class PlayedCards(Struct):
             return len(self.cards[card.color.char]) == max_number
         return False
 
-    def play(self, card: Card) -> None:
+    def play(self, card: Card2) -> None:
         if self.is_valid_play(card):
             self.cards[card.color.char].append(card)
 
@@ -55,7 +55,7 @@ class PlayedCards(Struct):
 
 
 class DiscardPile(Struct):
-    cards: List[Card]
+    cards: List[Card2]
 
     @classmethod
     def new(cls):
