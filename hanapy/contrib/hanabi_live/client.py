@@ -7,25 +7,39 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Type, 
 
 import websockets
 
-from hanapy.contrib.hanabi_live.actions import HLAction
+from hanapy.contrib.hanabi_live.actions import HLAction, action_to_command_data
 from hanapy.contrib.hanabi_live.models import (
     CommandData,
     GameActionListMessage,
+    GameActionMessage,
     HLModel,
+    InitMessage,
     TableMessage,
     TableStartMessage,
     UserMessage,
 )
 from hanapy.contrib.hanabi_live.state import HLGameState
 from hanapy.contrib.hanabi_live.ws_client import Msg, create_table, get_access_token, join_table, table_start
+from hanapy.core.config import GameConfig
 from hanapy.players.console.player import ConsolePlayerActor
 from hanapy.runtime.asyncio import get_event_loop
 from hanapy.runtime.buffers import BufferingHanapyClient, EventWaitAborted
-from hanapy.runtime.events import Event, GameStartedEvent, PlayerRegisteredEvent, RegisterPlayerEvent, StartGameEvent
+from hanapy.runtime.events import (
+    ActionEvent,
+    Event,
+    GameStartedEvent,
+    MemoInitEvent,
+    PlayerRegisteredEvent,
+    RegisterPlayerEvent,
+    SetPlayersOrderEvent,
+    StartGameEvent,
+    WaitForActionEvent,
+)
 from hanapy.runtime.players import ClientPlayerProxy
 from hanapy.types import EventHandlers
 from hanapy.utils.log import init_logger
 from hanapy.utils.ser import dumps, loads
+from hanapy.variants.classic import ClassicGame, get_hand_size
 
 logger = logging.getLogger(__name__)
 
@@ -122,9 +136,7 @@ class HLHanapyAdapter:
         pid = data.name
         assert pid is not None
         self.players.append(pid)
-        await self.client.receive_event(
-            PlayerRegisteredEvent(pid=pid, player_num=len(self.players), players=[str(p) for p in self.players])
-        )
+        await self.client.receive_event(PlayerRegisteredEvent(pid=pid, player_num=-1, players=self.players))
 
     @on(RegisterPlayerEvent)
     async def register_player(self, event: RegisterPlayerEvent):
@@ -142,6 +154,14 @@ class HLHanapyAdapter:
         if not self.is_host:
             return
         await table_start(self.client.send_message, self.table_id, self.players)
+
+    @on(MemoInitEvent)
+    async def on_memo_init(self, event: MemoInitEvent):
+        self.game_state.player_view.memo = event.memo
+
+    @on(ActionEvent)
+    async def on_action_event(self, event: ActionEvent):
+        await self.client.send_message("action", action_to_command_data(event.action, self.table_id))
 
     @contextlib.asynccontextmanager
     async def wait_for_message(self, message_type: str, handler: Callable, model: Optional[Type] = None):
@@ -180,9 +200,32 @@ class HLHanapyAdapter:
         for action in data.list:
             self.game_state.apply_action(HLAction.from_action_data(action))
 
-    @on("action")
-    async def on_action(self, _, data):
-        self.game_state.apply_action(HLAction.from_action_data(data))
+    @on("gameAction", model=GameActionMessage)
+    async def on_action(self, _, data: GameActionMessage):
+        assert isinstance(data.action, dict)
+        self.game_state.apply_action(HLAction.from_action_data(data.action))
+
+    async def parse_init(self, _, data: InitMessage):
+        assert data.ourPlayerIndex is not None
+        self.game_state.set_player_num(data.ourPlayerIndex)
+        assert data.options is not None
+        if data.options.variantID != 0:
+            raise NotImplementedError("Other variants are not supported")
+        assert data.playerNames is not None
+        player_count = len(data.playerNames)
+        card_config = ClassicGame.get_card_config(...)  # type: ignore[arg-type]
+        config = GameConfig(
+            max_lives=3,
+            hand_size=get_hand_size(player_count),
+            player_count=player_count,
+            max_clues=8,
+            cards=card_config,
+        )
+        self.game_state.set_config(config, card_config.total_cards)
+        await self.client.receive_event(
+            SetPlayersOrderEvent(pid=self.pid, player_index=data.ourPlayerIndex, players=data.playerNames)
+        )
+        self.game_state.init_player_view()
 
     @on("tableStart", model=TableStartMessage)
     async def on_table_start(self, _, data: TableStartMessage):
@@ -191,11 +234,14 @@ class HLHanapyAdapter:
         logger.info("table started")
         self.started = True
         # await asyncio.sleep(1.)
-        async with self.wait_for_message("init", self.log):
+        async with self.wait_for_message("init", self.parse_init, InitMessage):
             await self.client.send_message("getGameInfo1", TableIDModel(tableID=self._table_id))
         async with self.wait_for_message("gameActionList", self.parse_actions_list, GameActionListMessage):
             await self.client.send_message("getGameInfo2", TableIDModel(tableID=self._table_id))
+        await self.client.send_message("loaded", TableIDModel(tableID=self.table_id))
         await self.client.receive_event(GameStartedEvent(pid=self.pid, view=self.game_state.get_player_view()))
+        if self.game_state.player_num == 0:
+            await self.client.receive_event(WaitForActionEvent(pid=self.pid, view=self.game_state.player_view))
 
 
 class TableIDModel(HLModel):
@@ -298,7 +344,7 @@ async def main():
         print(f"usage: python {__file__} name is_host")
         return
     name, is_host = sys.argv[1:]
-    await init_logger(logging.INFO)
+    await init_logger(logging.DEBUG)
     await run_client(
         username=name,
         password="123",  # noqa: S106

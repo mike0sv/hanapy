@@ -34,6 +34,10 @@ class ClassicDeckGenerator(DeckGenerator):
         return Deck(cards=cards)
 
 
+def get_hand_size(player_count: int):
+    return {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_count]
+
+
 class ClassicGame(BaseGame):
     def __init__(self, players: Sequence[PlayerActor], random_seed: Optional[int]):
         self.random_seed = random_seed
@@ -49,14 +53,11 @@ class ClassicGame(BaseGame):
             # raise ValueError()
         return GameConfig(
             max_lives=3,
-            hand_size=self.get_hand_size(player_count),
+            hand_size=get_hand_size(player_count),
             player_count=player_count,
             max_clues=8,
             cards=self.get_card_config(),
         )
-
-    def get_hand_size(self, player_count: int):
-        return {1: 5, 2: 5, 3: 5, 4: 4, 5: 3}[player_count]
 
     def get_loop(self) -> "GameLoop":
         return GameLoop(

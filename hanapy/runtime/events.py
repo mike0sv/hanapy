@@ -58,6 +58,12 @@ class PlayerRegisteredEvent(Event):
     players: List[str]
 
 
+class SetPlayersOrderEvent(Event):
+    __typename__: ClassVar = "set_players_order"
+    player_index: int
+    players: List[PlayerID]
+
+
 class StartGameEvent(Event):
     __typename__: ClassVar = "start_game"
 

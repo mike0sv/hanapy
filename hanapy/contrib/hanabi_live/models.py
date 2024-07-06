@@ -1,10 +1,36 @@
 # ruff: noqa: A003
-from typing import List, Optional, Any
+import datetime
+from typing import Any, List, Optional
+
 from msgspec import Struct
 
 
 class HLModel(Struct):
     pass
+
+
+class InitMessage(HLModel):
+    tableID: Optional[int] = None
+    playerNames: Optional[List[str]] = None
+    ourPlayerIndex: Optional[int] = None
+    spectating: Optional[bool] = None
+    shadowing: Optional[bool] = None
+    replay: Optional[bool] = None
+    databaseID: Optional[int] = None
+    hasCustomSeed: Optional[bool] = None
+    seed: Optional[str] = None
+    datetimeStarted: Optional[datetime.datetime] = None
+    datetimeFinished: Optional[datetime.datetime] = None
+    options: Optional["Options"] = None
+    characterAssignments: Optional[List[int]] = None
+    characterMetadata: Optional[List[int]] = None
+    sharedReplay: Optional[bool] = None
+    sharedReplayLeader: Optional[str] = None
+    sharedReplaySegment: Optional[int] = None
+    sharedReplayEffMod: Optional[int] = None
+    paused: Optional[bool] = None
+    pausePlayerIndex: Optional[int] = None
+    pauseQueued: Optional[bool] = None
 
 
 class CommandData(HLModel):
@@ -140,8 +166,8 @@ class ActionPlay(HLModel):
 
 class ActionPlayerTimes(HLModel):
     type: Optional[str] = None
-    playerTimes: Optional[List["int64"]] = None
-    duration: Optional["int64"] = None
+    playerTimes: Optional[List[int]] = None
+    duration: Optional[int] = None
 
 
 class ActionStrike(HLModel):

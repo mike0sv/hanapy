@@ -40,8 +40,9 @@ class HLGameState:
     def set_player_num(self, player_num: int):
         self._player_num = player_num
 
-    def set_config(self, config: GameConfig):
+    def set_config(self, config: GameConfig, deck_size: int):
         self._config = config
+        self._deck_size = deck_size
 
     def init_player_view(self):
         self._player_view = PlayerView(
@@ -49,12 +50,12 @@ class HLGameState:
             me=self.player_num,
             memo=PlayerMemo.create(),
             config=self.config,
-            cards=[],
+            cards=[[] for _ in range(self.config.player_count)],
             state=GameState.create(self.config, self.deck_size),
         )
 
     def apply_action(self, action: HLAction):
-        print("applied", action)
+        action.apply(self.player_view)
 
     def get_player_view(self) -> PlayerView:
         return self.player_view
