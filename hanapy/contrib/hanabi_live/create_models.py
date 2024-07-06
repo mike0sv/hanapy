@@ -51,6 +51,7 @@ TYPE_MAPPING = {
     "interface": "Any",
     "int64": "int",
     "time.Time": "datetime.datetime",
+    "Spectator": "str",  # this is what we get in TableMessage.spectators
 }
 
 

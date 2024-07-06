@@ -7,7 +7,7 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Type, 
 
 import websockets
 
-from hanapy.contrib.hanabi_live.actions import HLAction, action_to_command_data
+from hanapy.contrib.hanabi_live.actions import HLAction, HLActionTurn, action_to_command_data
 from hanapy.contrib.hanabi_live.models import (
     CommandData,
     GameActionListMessage,
@@ -26,6 +26,7 @@ from hanapy.runtime.asyncio import get_event_loop
 from hanapy.runtime.buffers import BufferingHanapyClient, EventWaitAborted
 from hanapy.runtime.events import (
     ActionEvent,
+    ActionVerificationEvent,
     Event,
     GameStartedEvent,
     MemoInitEvent,
@@ -33,6 +34,7 @@ from hanapy.runtime.events import (
     RegisterPlayerEvent,
     SetPlayersOrderEvent,
     StartGameEvent,
+    UpdatePlayerMemoEvent,
     WaitForActionEvent,
 )
 from hanapy.runtime.players import ClientPlayerProxy
@@ -77,9 +79,8 @@ class HLHanapyAdapter:
     async def on_message(self, message_type: str, data: Msg):
         if message_type in _handlers:
             for handler, model in list(_handlers[message_type]):
-                if model is not None:
-                    data = loads(model, data)
-                await handler(self, message_type, data)
+                model_data = data if model is None else loads(model, data)
+                await handler(self, message_type, model_data)
             return
         raise NotImplementedError(message_type)
 
@@ -123,7 +124,7 @@ class HLHanapyAdapter:
         if data.id == self._table_id:
             self._table_id = None
 
-    @on("warning", "game", "joined", "userLeft", "init", "connected", "gameActionList")
+    @on("warning", "game", "joined", "userLeft", "init", "connected", "gameActionList", "tableProgress")
     async def log(self, message_type: str, data):
         logger.info("%s %s", message_type, data)
 
@@ -161,11 +162,36 @@ class HLHanapyAdapter:
 
     @on(ActionEvent)
     async def on_action_event(self, event: ActionEvent):
-        await self.client.send_message("action", action_to_command_data(event.action, self.table_id))
+        has_warning = asyncio.Event()
+        next_turn = asyncio.Event()
+
+        async def wait_for_warning(_, data):
+            has_warning.set()
+
+        async def wait_for_next_turn(_, data: GameActionMessage):
+            if data.action["type"] == "turn":  # type: ignore[index]
+                next_turn.set()
+
+        async with self.wait_for_message("warning", wait_for_warning) as warn, self.wait_for_message(
+            "gameAction", wait_for_next_turn, GameActionMessage
+        ) as nxt:
+            await self.client.send_message(
+                "action", action_to_command_data(event.action, self.table_id, self.game_state.player_view)
+            )
+            await asyncio.wait([has_warning.wait(), next_turn.wait()], return_when=asyncio.FIRST_COMPLETED)
+            await self.client.receive_event(ActionVerificationEvent(pid=self.pid, success=next_turn.is_set(), msg=""))
+            warn.set()
+            nxt.set()
+
+    @on(UpdatePlayerMemoEvent)
+    async def on_update_memo(self, event: UpdatePlayerMemoEvent):
+        self.game_state.player_view.memo = event.memo
+        self.game_state.new_player_view.memo = event.memo
 
     @contextlib.asynccontextmanager
     async def wait_for_message(self, message_type: str, handler: Callable, model: Optional[Type] = None):
         done = asyncio.Event()
+        stop = asyncio.Event()
 
         async def _handler(_, mt: str, data: Msg):
             await handler(mt, data)
@@ -173,9 +199,11 @@ class HLHanapyAdapter:
 
         try:
             _handlers[message_type].append((_handler, model))
-            yield
+            yield stop
             logger.info(f"waiting for {message_type}")
-            await done.wait()
+            await asyncio.wait([done.wait(), stop.wait()], return_when=asyncio.FIRST_COMPLETED)
+            done.set()
+            stop.set()
         finally:
             _handlers[message_type].remove((_handler, model))
 
@@ -199,11 +227,17 @@ class HLHanapyAdapter:
         assert data.list is not None
         for action in data.list:
             self.game_state.apply_action(HLAction.from_action_data(action))
+        self.game_state.flush()
 
     @on("gameAction", model=GameActionMessage)
     async def on_action(self, _, data: GameActionMessage):
         assert isinstance(data.action, dict)
-        self.game_state.apply_action(HLAction.from_action_data(data.action))
+        action_data = HLAction.from_action_data(data.action)
+        self.game_state.apply_action(action_data)
+        if isinstance(action_data, HLActionTurn):
+            await self.client.receive_event(self.game_state.get_update_and_flush(self.pid))
+            if action_data.action.currentPlayerIndex == self.game_state.player_num:
+                await self.client.receive_event(WaitForActionEvent(pid=self.pid, view=self.game_state.player_view))
 
     async def parse_init(self, _, data: InitMessage):
         assert data.ourPlayerIndex is not None

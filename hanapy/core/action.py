@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import TYPE_CHECKING, ClassVar, List, Optional
 
 from msgspec import Struct
@@ -53,6 +54,7 @@ class StateUpdate(Struct):
     discard: Optional[PlayerPosCard] = None
     play: Optional[PlayerPosCard] = None
     new_card: Optional[Card] = None
+    new_card_dealed: bool = False
     clue: Optional[ClueResult] = None
 
     def apply(self, game_data: "GameData") -> None:
@@ -86,6 +88,11 @@ class StateUpdate(Struct):
 
         if game_data.deck.is_empty():
             game_data.state.turns_left -= 1
+
+    def masked(self) -> "StateUpdate":
+        cp = deepcopy(self)
+        cp.new_card = None
+        return cp
 
     def validate(self, game_data: "GameData") -> None:
         new_clues = game_data.state.clues_left + self.clues
@@ -124,8 +131,8 @@ class StateUpdate(Struct):
             res += f"discard={self.discard.card.to_str(False, False)} from {self.discard.pos},"
         if self.play is not None:
             res += f"play={self.play.card.to_str(False, False)} from {self.play.pos},"
-        if self.new_card is not None:
-            res += f"new_card={self.new_card.to_str(False, False)},"
+        if self.new_card_dealed:
+            res += f"new_card={self.new_card.to_str(False, False) if self.new_card is not None else '??'},"
         if self.lives != 0:
             res += f"lives={self.lives},"
         if self.clues != 0:
@@ -152,11 +159,13 @@ class DiscardAction(Action):
 
     def to_update(self, game_data: "GameData") -> StateUpdate:
         card = game_data.players[self.player].cards[self.card]
+        next_card = game_data.deck.peek()
         return StateUpdate(
             player=self.player,
             clues=1,
             discard=(PlayerPosCard(self.player, self.card, card)),
-            new_card=game_data.deck.peek(),
+            new_card=next_card,
+            new_card_dealed=next_card is not None,
         )
 
     def __str__(self):
@@ -173,12 +182,14 @@ class PlayAction(Action):
     def to_update(self, game_data: "GameData") -> StateUpdate:
         card = game_data.players[self.player].cards[self.card]
         valid_play = game_data.state.played.is_valid_play(card)
+        next_card = game_data.deck.peek()
         return StateUpdate(
             player=self.player,
             lives=-1 if not valid_play else 0,
             clues=1 if valid_play and card.clues else 0,
             play=(PlayerPosCard(self.player, self.card, card)),
-            new_card=game_data.deck.peek(),
+            new_card=next_card,
+            new_card_dealed=next_card is not None,
             discard=(PlayerPosCard(self.player, self.card, card)) if not valid_play else None,
         )
 

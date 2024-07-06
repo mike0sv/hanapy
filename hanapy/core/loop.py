@@ -92,7 +92,9 @@ class GameLoop:
             update.apply(self.data)
             new_memos = await asyncio.gather(
                 *[
-                    player.observe_update(old_views[i], update, view)
+                    player.observe_update(
+                        old_views[i], update if i != self.data.state.current_player else update.masked(), view
+                    )
                     for i, (player, view) in enumerate(self.enum_player_views())
                 ]
             )

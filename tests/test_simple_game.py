@@ -1,7 +1,10 @@
+import pytest
+
 from hanapy.players.dummy import DiscardingPlayer
 from hanapy.variants.classic import ClassicGame
 
 
+@pytest.mark.asyncio
 async def test_classic_game():
     players = [DiscardingPlayer("1"), DiscardingPlayer("1")]
     game = ClassicGame(players, random_seed=0)

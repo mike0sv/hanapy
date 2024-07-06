@@ -28,7 +28,10 @@ class Color(msgspec.Struct, frozen=True):
         return f"[{self.value}]{self.char}[/{self.value}]"
 
 
-class Card(msgspec.Struct, frozen=True):
+class Card(
+    msgspec.Struct,
+    frozen=True,
+):
     color: Color
     number: int
     clues: int = 0
@@ -44,6 +47,9 @@ class Card(msgspec.Struct, frozen=True):
         if not isinstance(other, Card):
             return False
         return self.color == other.color and self.number == other.number
+
+    def __hash__(self):
+        return hash((self.color.__hash__(), self.number))
 
 
 class Clue(msgspec.Struct):

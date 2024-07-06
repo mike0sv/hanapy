@@ -220,7 +220,7 @@ class TableMessage(HLModel):
     sharedReplay: Optional[bool] = None
     progress: Optional[int] = None
     players: Optional[List[str]] = None
-    spectators: Optional[List["Spectator"]] = None
+    spectators: Optional[List[str]] = None
     maxPlayers: Optional[int] = None
 
 

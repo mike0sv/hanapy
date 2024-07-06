@@ -1,9 +1,13 @@
+from copy import deepcopy
 from typing import Optional
 
 from hanapy.contrib.hanabi_live.actions import HLAction
+from hanapy.core.action import StateUpdate
 from hanapy.core.card import CluedCards
 from hanapy.core.config import GameConfig, GameState
 from hanapy.core.player import PlayerMemo, PlayerView
+from hanapy.runtime.events import ObserveUpdateEvent
+from hanapy.types import PlayerID
 
 
 class HLGameState:
@@ -13,12 +17,20 @@ class HLGameState:
         self._config: Optional[GameConfig] = None
         self._deck_size: Optional[int] = None
         self._player_view: Optional[PlayerView] = None
+        self._new_player_view: Optional[PlayerView] = None
+        self._next_update: StateUpdate = StateUpdate(player=-1)
 
     @property
     def player_view(self) -> PlayerView:
         if self._player_view is None:
             raise ValueError("HLGameState is not initialized")
         return self._player_view
+
+    @property
+    def new_player_view(self) -> PlayerView:
+        if self._new_player_view is None:
+            raise ValueError("HLGameState is not initialized")
+        return self._new_player_view
 
     @property
     def player_num(self):
@@ -56,9 +68,22 @@ class HLGameState:
         )
         # cleat clued cards, they will be filled by draw actions with correct order
         self.player_view.state.clued = CluedCards.create(self.config.player_count, 0, self.config.cards)
+        self._new_player_view = deepcopy(self._player_view)
 
     def apply_action(self, action: HLAction):
-        action.apply(self.player_view)
+        action.apply(self.new_player_view, self._next_update)
 
     def get_player_view(self) -> PlayerView:
         return self.player_view
+
+    def flush(self):
+        self._player_view = self._new_player_view
+        self._new_player_view = deepcopy(self._player_view)
+        self._next_update = StateUpdate(player=-1)
+
+    def get_update_and_flush(self, pid: PlayerID) -> ObserveUpdateEvent:
+        event = ObserveUpdateEvent(
+            pid=pid, view=self.player_view, new_view=self._new_player_view, update=self._next_update
+        )
+        self.flush()
+        return event
