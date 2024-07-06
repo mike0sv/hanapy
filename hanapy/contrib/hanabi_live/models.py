@@ -1,6 +1,5 @@
 # ruff: noqa: A003
-from typing import Any, List, Optional
-
+from typing import List, Optional, Any
 from msgspec import Struct
 
 
@@ -90,6 +89,47 @@ class CardIdentity(HLModel):
     rank: Optional[int] = None
 
 
+class ActionClue(HLModel):
+    type: Optional[str] = None
+    clue: Optional["Clue"] = None
+    giver: Optional[int] = None
+    list: Optional[List[int]] = None
+    target: Optional[int] = None
+    turn: Optional[int] = None
+
+
+class ActionDiscard(HLModel):
+    type: Optional[str] = None
+    playerIndex: Optional[int] = None
+    order: Optional[int] = None
+    suitIndex: Optional[int] = None
+    rank: Optional[int] = None
+    failed: Optional[bool] = None
+
+
+class ActionDraw(HLModel):
+    type: Optional[str] = None
+    playerIndex: Optional[int] = None
+    order: Optional[int] = None
+    suitIndex: Optional[int] = None
+    rank: Optional[int] = None
+
+
+class ActionPlay(HLModel):
+    type: Optional[str] = None
+    playerIndex: Optional[int] = None
+    order: Optional[int] = None
+    suitIndex: Optional[int] = None
+    rank: Optional[int] = None
+
+
+class ActionStrike(HLModel):
+    type: Optional[str] = None
+    num: Optional[int] = None
+    turn: Optional[int] = None
+    order: Optional[int] = None
+
+
 class UserMessage(HLModel):
     userID: Optional[int] = None
     name: Optional[str] = None
@@ -122,6 +162,11 @@ class TableMessage(HLModel):
 class TableStartMessage(HLModel):
     tableID: Optional[int] = None
     replay: Optional[bool] = None
+
+
+class GameActionMessage(HLModel):
+    tableID: Optional[int] = None
+    action: Optional[Any] = None
 
 
 class GameJSON(HLModel):

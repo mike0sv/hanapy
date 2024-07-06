@@ -6,7 +6,8 @@ from typing import Any, Awaitable, Callable, List, Optional, Tuple, Type
 import requests.utils
 import websockets
 
-from hanapy.contrib.hanabi_live.models import CommandData, GameActionListMessage, HLModel, Options, TableMessage
+from hanapy.contrib.hanabi_live.models import CommandData, GameActionListMessage, HLModel, Options, TableMessage, \
+    GameActionMessage
 from hanapy.utils.log import init_logger
 from hanapy.utils.ser import dumps, loads
 
@@ -60,7 +61,7 @@ class WsClient:
             async for message in websocket:
                 index = message.find(" ")
                 type_part = message[:index]
-                json_part = message[index + 1 :]
+                json_part = message[index + 1:]
                 json_data = json.loads(json_part)
                 await self.on_message(type_part, json_data, self.send)
 
@@ -127,6 +128,17 @@ async def join_table(send: Send, table_id: int):
     await send("tableJoin", CommandData(tableID=table_id))
 
 
+async def loaded(send: Send, table_id: int):
+    await send("loaded", CommandData(tableID=table_id))
+
+
+async def action(send: Send, table_id: int, type: int, target: int, value: int):
+    await send("action", CommandData(tableID=table_id, type=type, target=target, value=value))
+
+
+async def on_game_action(send: Send, table_id: int, action: GameActionMessage):
+    pass
+
 async def on_user(data: Msg, send: Send):
     table_id = data.get("tableID")
     print(table_id)
@@ -167,7 +179,8 @@ async def main():
             ("table", None, on_table),
         ]
     )
-    client = WsClient(username="kek1", password="123", address="127.0.0.1:9000", on_message=msg_handler.on_message)  # noqa: S106
+    client = WsClient(username="kek1", password="123", address="127.0.0.1:9000",
+                      on_message=msg_handler.on_message)  # noqa: S106
     await client.start()
 
 
