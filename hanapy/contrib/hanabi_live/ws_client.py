@@ -116,7 +116,11 @@ async def say_text(send: Send, msg: str, room: str):
 
 
 async def table_start(send: Send, table_id: int, indented_players: List[str]):
-    await send("tableStart", CommandData(tableID=table_id, intendedPlayers=indented_players))
+    class TableStartModel(HLModel):
+        tableID: Optional[int] = None
+        intendedPlayers: Optional[List[str]] = None
+
+    await send("tableStart", TableStartModel(tableID=table_id, intendedPlayers=indented_players))
 
 
 async def join_table(send: Send, table_id: int):

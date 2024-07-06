@@ -148,7 +148,7 @@ class HLHanapyAdapter:
     async def on_start_game(self, _: StartGameEvent):
         if not self.is_host:
             return
-        await table_start(self.client.send_message, self.table_id, ["kek1", "kek2"])
+        await table_start(self.client.send_message, self.table_id, self.players)
 
     @contextlib.asynccontextmanager
     async def wait_for_message(self, message_type: str, handler: Callable, model: Optional[Type] = None):
@@ -197,11 +197,16 @@ class HLHanapyAdapter:
             return
         logger.info("table started")
         self.started = True
+        # await asyncio.sleep(1.)
         async with self.wait_for_message("init", self.log):
-            await self.client.send_message("getGameInfo1", CommandData(tableID=self._table_id))
+            await self.client.send_message("getGameInfo1", TableIDModel(tableID=self._table_id))
         async with self.wait_for_message("gameActionList", self.parse_actions_list, GameActionListMessage):
-            await self.client.send_message("getGameInfo2", CommandData(tableID=self._table_id))
+            await self.client.send_message("getGameInfo2", TableIDModel(tableID=self._table_id))
         await self.client.receive_event(GameStartedEvent(pid=self.pid, view=self.game_state.get_player_view()))
+
+
+class TableIDModel(HLModel):
+    tableID: Optional[int] = None
 
 
 class HLClient(BufferingHanapyClient):
@@ -246,13 +251,16 @@ class HLClient(BufferingHanapyClient):
         logger.debug(f"connecting to websocket url {uri}")
 
         async def listen_for_events():
-            async with websockets.connect(uri, extra_headers={"Cookie": f"hanabi.sid={token}"}) as websocket:
+            async with websockets.connect(
+                uri, extra_headers={"Cookie": f"hanabi.sid={token}"}, timeout=10
+            ) as websocket:
                 self._websocket = websocket
                 logger.info("connection established")
                 async for message in websocket:
                     message_type, json_data = message.split(" ", 1)
                     logger.info(f"got {message_type}")
                     await self.adapter.on_message(message_type, json_data)
+            logger.error("Socket disconnected")
 
         get_event_loop().create_task(listen_for_events())
 
