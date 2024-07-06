@@ -22,6 +22,12 @@ STRUCT_FILTER = {
     "GameActionListMessage",
     "UserMessage",
     "TableStartMessage",
+    "GameActionMessage",
+    "ActionClue",
+    "ActionStrike",
+    "ActionPlay",
+    "ActionDiscard",
+    "ActionDraw",
 }
 
 STRUCT_TEMPLATE = """
