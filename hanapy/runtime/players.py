@@ -16,6 +16,7 @@ from hanapy.runtime.events import (
     MemoInitEvent,
     ObserveUpdateEvent,
     PlayerRegisteredEvent,
+    SetPlayersOrderEvent,
     StartGameEvent,
     UpdatePlayerMemoEvent,
     WaitForActionEvent,
@@ -91,6 +92,9 @@ class ClientPlayerProxy:
 
         logger.debug("running client game proxy loop")
         game_started_event = await self.client.wait_for_event(GameStartedEvent)
+        player_order = await self.client.wait_for_event(SetPlayersOrderEvent)
+        self.player_num = player_order.player_index
+        self.player_count = len(player_order.players)
 
         self.client.add_event_handler(GameEndedEvent, self.game_ended_handler)
         memo = await self.player.on_game_start(game_started_event.view)

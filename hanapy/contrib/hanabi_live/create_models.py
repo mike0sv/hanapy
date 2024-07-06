@@ -34,6 +34,7 @@ STRUCT_FILTER = {
     "ActionStatus",
     "ActionTurn",
     "Clue",
+    "InitMessage",
 }
 
 STRUCT_TEMPLATE = """
@@ -42,7 +43,15 @@ class {name}(HLModel):
 
 FIELD_TEMPLATE = "    {name}: Optional[{type}] = None"
 
-TYPE_MAPPING = {"uint64": "int", "int": "int", "string": "str", "bool": "bool", "interface": "Any"}
+TYPE_MAPPING = {
+    "uint64": "int",
+    "int": "int",
+    "string": "str",
+    "bool": "bool",
+    "interface": "Any",
+    "int64": "int",
+    "time.Time": "datetime.datetime",
+}
 
 
 def iter_structs(path: str) -> Iterable[Tuple[str, List[str]]]:
@@ -96,7 +105,9 @@ def create_models(path: str, out: str):
         structs.append(struct_to_python(name, lines))
 
     with open(out, "w", encoding="utf8") as f:
-        f.write("# ruff: noqa: A003\nfrom typing import List, Optional, Any\nfrom msgspec import Struct\n\n\n")
+        f.write(
+            "# ruff: noqa: A003\nfrom typing import List, Optional, Any\nfrom msgspec import Struct\n\nimport datetime\n\n"
+        )
         f.write("class HLModel(Struct):\n    pass\n\n")
         f.write("\n\n".join(structs))
         f.write("\n")

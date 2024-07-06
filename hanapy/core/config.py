@@ -75,6 +75,10 @@ class CardConfig(Struct):
     def color_count(self):
         return len(self.colors)
 
+    @property
+    def total_cards(self):
+        return sum(self.counts.values()) * self.color_count
+
 
 class GameState(Struct):
     turn: int
