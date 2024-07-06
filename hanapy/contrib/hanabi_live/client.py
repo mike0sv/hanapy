@@ -69,7 +69,7 @@ class HLHanapyAdapter:
 
     async def on_message(self, message_type: str, data: Msg):
         if message_type in _handlers:
-            for handler, model in _handlers[message_type]:
+            for handler, model in list(_handlers[message_type]):
                 if model is not None:
                     data = loads(model, data)
                 await handler(self, message_type, data)
@@ -154,8 +154,8 @@ class HLHanapyAdapter:
     async def wait_for_message(self, message_type: str, handler: Callable, model: Optional[Type] = None):
         done = asyncio.Event()
 
-        async def _handler(_, message_type: str, data: Msg):
-            await handler(message_type, data)
+        async def _handler(_, mt: str, data: Msg):
+            await handler(mt, data)
             done.set()
 
         try:
@@ -259,7 +259,7 @@ class HLClient(BufferingHanapyClient):
                 async for message in websocket:
                     message_type, json_data = message.split(" ", 1)
                     logger.info(f"got {message_type}")
-                    await self.adapter.on_message(message_type, json_data)
+                    get_event_loop().create_task(self.adapter.on_message(message_type, json_data))
             logger.error("Socket disconnected")
 
         get_event_loop().create_task(listen_for_events())
