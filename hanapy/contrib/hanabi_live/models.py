@@ -1,5 +1,6 @@
 # ruff: noqa: A003
-from typing import List, Optional, Any
+from typing import Any, List, Optional
+
 from msgspec import Struct
 
 
@@ -128,6 +129,11 @@ class ActionStrike(HLModel):
     num: Optional[int] = None
     turn: Optional[int] = None
     order: Optional[int] = None
+
+
+class Clue(HLModel):
+    type: Optional[int] = None
+    value: Optional[int] = None
 
 
 class UserMessage(HLModel):

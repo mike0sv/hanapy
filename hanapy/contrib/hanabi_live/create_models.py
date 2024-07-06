@@ -28,6 +28,7 @@ STRUCT_FILTER = {
     "ActionPlay",
     "ActionDiscard",
     "ActionDraw",
+    "Clue",
 }
 
 STRUCT_TEMPLATE = """

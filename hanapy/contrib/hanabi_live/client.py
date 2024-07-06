@@ -47,7 +47,7 @@ class HLGameState:
         print("applied", action)
 
     def get_player_view(self) -> PlayerView:
-        raise NotImplementedError
+        raise NotImplementedError("no player view yet")
 
 
 class HLHanapyAdapter:
