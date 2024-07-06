@@ -7,52 +7,51 @@ from hanapy.types import SeenCards
 
 
 class PlayedCards(Struct):
-    cards: Dict[str, int]
+    cards: Dict[str, List[Card]]
 
     @classmethod
     def empty(cls, colors: List[Color]):
-        return PlayedCards(cards={c.char: 0 for c in colors})
+        return PlayedCards(cards={c.char: [] for c in colors})
 
     def is_valid_play(self, card: Union[Card, CardInfo]) -> bool:
         if isinstance(card, Card):
-            return card.number - 1 == self.cards[card.color.char]
+            return card.number - 1 == len(self.cards[card.color.char])
         as_card = card.as_card()
         if as_card is not None:
             return self.is_valid_play(as_card)
         if card.number is not None:
-            return all(card.number - 1 == val for val in self.cards.values())
+            return all(card.number - 1 == len(stack) for stack in self.cards.values())
         return False
 
     def is_obsolete(self, card: Union[Card, CardInfo], max_number: int) -> bool:
         if isinstance(card, Card):
-            return card.number <= self.cards[card.color.char]
+            return card.number <= len(self.cards[card.color.char])
         as_card = card.as_card()
         if as_card is not None:
             return self.is_obsolete(as_card, max_number)
         # todo improve logic
         if card.number is not None:
-            return all(card.number <= val for val in self.cards.values())
+            return all(card.number <= len(stack) for stack in self.cards.values())
         if card.color is not None:
-            return self.cards[card.color.char] == max_number
+            return len(self.cards[card.color.char]) == max_number
         return False
 
     def play(self, card: Card) -> None:
         if self.is_valid_play(card):
-            self.cards[card.color.char] += 1
+            self.cards[card.color.char].append(card)
 
     def is_complete(self, color_count: int, max_card_number: int) -> bool:
-        return len(self.cards) == color_count and all(v == max_card_number for v in self.cards.values())
+        return len(self.cards) == color_count and all(len(stack) == max_card_number for stack in self.cards.values())
 
     @property
     def score(self):
-        return sum(self.cards.values())
+        return sum(len(stack) for stack in self.cards.values())
 
-    def get_all_cards(self, colors: List[Color]) -> SeenCards:
-        return SeenCards(
-            Card(color=Color.parse(c, colors), number=n)
-            for c, max_num in self.cards.items()
-            for n in range(1, max_num + 1)
-        )
+    def get_all_cards(self) -> SeenCards:
+        res = []
+        for stack in self.cards.values():
+            res += stack
+        return SeenCards(res)
 
 
 class DiscardPile(Struct):

@@ -49,7 +49,7 @@ class PlayerView(Struct):
         return self.state.clued[self.me]
 
     def get_all_seen_cards(self, except_player: int) -> SeenCards:
-        result: Counter[Card] = self.state.played.get_all_cards(self.config.cards.colors)
+        result: Counter[Card] = self.state.played.get_all_cards()
         result.update(self.state.discarded.cards)
         for i, cards in enumerate(self.cards):
             if i == self.me or i == except_player:

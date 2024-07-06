@@ -31,6 +31,7 @@ class Color(msgspec.Struct, frozen=True):
 class Card(msgspec.Struct, frozen=True):
     color: Color
     number: int
+    order: int
     clues: int = 0
 
     def to_str(self, touched: bool, colored: bool = True):
