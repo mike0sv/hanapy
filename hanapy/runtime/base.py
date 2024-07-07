@@ -87,8 +87,10 @@ class HanapyServer(HanapyBase):
     async def start(
         self, host_pid: PlayerID, game_variant: GameVariant, random_seed: RandomSeed, log_file: Optional[str]
     ):
-        asyncio.get_event_loop().create_task(self.run())
-        asyncio.get_event_loop().create_task(self.start_game_loop(host_pid, game_variant, random_seed, log_file))
+        asyncio.get_event_loop().create_task(self.run(), name="server_run_loop")
+        asyncio.get_event_loop().create_task(
+            self.start_game_loop(host_pid, game_variant, random_seed, log_file), name="server_game_loop"
+        )
 
 
 class HanapyClient(HanapyBase):

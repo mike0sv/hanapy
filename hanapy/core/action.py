@@ -61,7 +61,7 @@ class StateUpdate(Struct):
         game_data.state.lives_left += self.lives
         game_data.state.clues_left = min(game_data.state.clues_left + self.clues, game_data.config.max_clues)
         player: Optional[int] = None
-        new_card_dealed = self.new_card is not None
+        new_card_dealed = self.new_card_dealed
         if self.discard is not None:
             player = self.discard.player
             del game_data.players[player].cards[self.discard.pos]
@@ -79,6 +79,7 @@ class StateUpdate(Struct):
             game_data.state.played.play(self.play.card)
         if new_card_dealed:
             assert player is not None
+            assert self.new_card is not None
             new_card = game_data.deck.draw()
             assert new_card == self.new_card
             game_data.players[player].gain_card(new_card)

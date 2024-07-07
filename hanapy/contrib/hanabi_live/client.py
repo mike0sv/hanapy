@@ -7,9 +7,11 @@ from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, Type, 
 
 import websockets
 
+from hanapy.contrib.bots import RankingConventionsBotPlayer
 from hanapy.contrib.hanabi_live.actions import HLAction, HLActionTurn, action_to_command_data
 from hanapy.contrib.hanabi_live.models import (
     CommandData,
+    FinishOngoingGameMessage,
     GameActionListMessage,
     GameActionMessage,
     HLModel,
@@ -20,14 +22,14 @@ from hanapy.contrib.hanabi_live.models import (
 )
 from hanapy.contrib.hanabi_live.state import HLGameState
 from hanapy.contrib.hanabi_live.ws_client import Msg, create_table, get_access_token, join_table, table_start
-from hanapy.core.config import GameConfig
-from hanapy.players.console.player import ConsolePlayerActor
+from hanapy.core.config import GameConfig, GameResult
 from hanapy.runtime.asyncio import get_event_loop
 from hanapy.runtime.buffers import BufferingHanapyClient, EventWaitAborted
 from hanapy.runtime.events import (
     ActionEvent,
     ActionVerificationEvent,
     Event,
+    GameEndedEvent,
     GameStartedEvent,
     MemoInitEvent,
     PlayerRegisteredEvent,
@@ -110,6 +112,8 @@ class HLHanapyAdapter:
         "spectators",
         "clock",
         "noteListPlayer",
+        "cardIdentities",
+        "noteList",
     )
     async def skip(self, message_type: str, data):
         # logger.info("user %s", data)
@@ -133,6 +137,8 @@ class HLHanapyAdapter:
         if data.status != 1:
             return
         if data.tableID != self._table_id:
+            return
+        if self.started:
             return
         pid = data.name
         assert pid is not None
@@ -277,6 +283,21 @@ class HLHanapyAdapter:
         if self.game_state.player_num == 0:
             await self.client.receive_event(WaitForActionEvent(pid=self.pid, view=self.game_state.player_view))
 
+    @on("finishOngoingGame", model=FinishOngoingGameMessage)
+    async def on_game_over(self, _, data: FinishOngoingGameMessage):
+        if data.tableID != self._table_id:
+            return
+
+        # todo scores
+        await self.client.receive_event(
+            GameEndedEvent(
+                pid=self.pid,
+                view=self.game_state.player_view,
+                game_result=GameResult(is_win=False, score=0, max_score=0),
+            )
+        )
+        self.client.listening = False
+
 
 class TableIDModel(HLModel):
     tableID: Optional[int] = None
@@ -332,12 +353,16 @@ class HLClient(BufferingHanapyClient):
                 self._websocket = websocket
                 logger.info("connection established")
                 async for message in websocket:
+                    if not self.listening:
+                        break
                     message_type, json_data = message.split(" ", 1)
                     logger.info(f"got {message_type}")
-                    get_event_loop().create_task(self.adapter.on_message(message_type, json_data))
+                    get_event_loop().create_task(
+                        self.adapter.on_message(message_type, json_data), name=f"on_message_{message_type}"
+                    )
             logger.error("Socket disconnected")
 
-        get_event_loop().create_task(listen_for_events())
+        get_event_loop().create_task(listen_for_events(), name="socket_listener_loop")
 
     async def connect2(self):
         logger.debug("[client] creating connection")
@@ -357,7 +382,8 @@ class HLClient(BufferingHanapyClient):
 async def run_client(
     username: str, password: str, namespace: str, address: str, is_host: bool, auto_start_players: Optional[int] = None
 ):
-    player = ConsolePlayerActor(username)
+    # player = ConsolePlayerActor(username)
+    player = RankingConventionsBotPlayer.bot(False)(username)
 
     client = HLClient(username, password, namespace, address, is_host)
 
@@ -376,6 +402,18 @@ async def run_client(
 
 
 async def main():
+    # async def log_tasks():
+    #     while True:
+    #         await asyncio.sleep(10)
+    #         print("-" * 40)
+    #         for task in asyncio.all_tasks():
+    #             if task.get_name() == "log_tasks":
+    #                 continue
+    #             print(task.get_name())
+    #             task.print_stack(limit=1)
+    #         print("-" * 40)
+    # get_event_loop().create_task(log_tasks(), name="log_tasks")
+
     if len(sys.argv) != 4:
         print(f"usage: python {__file__} name is_host namespace")
         return

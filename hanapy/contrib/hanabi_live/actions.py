@@ -12,7 +12,9 @@ from hanapy.contrib.hanabi_live.models import (
     ActionClue,
     ActionDiscard,
     ActionDraw,
+    ActionGameOver,
     ActionPlay,
+    ActionPlayerTimes,
     ActionStatus,
     ActionStrike,
     ActionTurn,
@@ -22,7 +24,17 @@ from hanapy.core.action import Action, ClueAction, ClueResult, DiscardAction, Pl
 from hanapy.core.card import Card, CardInfo, Color
 from hanapy.core.player import PlayerView
 
-_Action = Union[ActionStrike, ActionDraw, ActionPlay, ActionDiscard, ActionClue, ActionStatus, ActionTurn]
+_Action = Union[
+    ActionStrike,
+    ActionDraw,
+    ActionPlay,
+    ActionDiscard,
+    ActionClue,
+    ActionStatus,
+    ActionTurn,
+    ActionGameOver,
+    ActionPlayerTimes,
+]
 
 TA = TypeVar("TA", bound=_Action)
 
@@ -146,6 +158,16 @@ class HLActionTurn(HLAction[ActionTurn]):
         pass
 
 
+class HLActionGameOver(HLAction[ActionGameOver]):
+    def apply(self, player_view: PlayerView, state_update: StateUpdate):
+        pass
+
+
+class HLActionPlayerTimes(HLAction[ActionPlayerTimes]):
+    def apply(self, player_view: PlayerView, state_update: StateUpdate):
+        pass
+
+
 action_type_mapping = {
     "draw": (ActionDraw, HLActionDraw),
     "discard": (ActionDiscard, HLActionDiscard),
@@ -154,6 +176,8 @@ action_type_mapping = {
     "strike": (ActionStrike, HLActionStrike),
     "status": (ActionStatus, HLActionStatus),
     "turn": (ActionTurn, HLActionTurn),
+    "gameOver": (ActionGameOver, HLActionGameOver),
+    "playerTimes": (ActionPlayerTimes, HLActionPlayerTimes),
 }
 
 

@@ -35,6 +35,7 @@ STRUCT_FILTER = {
     "ActionTurn",
     "Clue",
     "InitMessage",
+    "FinishOngoingGameMessage",
 }
 
 STRUCT_TEMPLATE = """
@@ -107,9 +108,18 @@ def create_models(path: str, out: str):
 
     with open(out, "w", encoding="utf8") as f:
         f.write(
-            "# ruff: noqa: A003\nfrom typing import List, Optional, Any\nfrom msgspec import Struct\n\nimport datetime\n\n"
+            """# ruff: noqa: A003
+import datetime
+from typing import Any, List, Optional
+
+from msgspec import Struct
+
+
+class HLModel(Struct, omit_defaults=True):
+    pass
+
+"""
         )
-        f.write("class HLModel(Struct, omit_defaults=True):\n    pass\n\n")
         f.write("\n\n".join(structs))
         f.write("\n")
 

@@ -24,5 +24,5 @@ async def _init_logger(level=logging.CRITICAL):
 
 
 async def init_logger(level=logging.CRITICAL):
-    _ = asyncio.create_task(_init_logger(level))
+    _ = asyncio.create_task(_init_logger(level), name="logger_queue_loop")
     await asyncio.sleep(0)

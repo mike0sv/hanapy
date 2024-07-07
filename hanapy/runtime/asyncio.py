@@ -29,7 +29,9 @@ class AsyncServer(HostPortMixin, BufferingHanapyServer[StreamWriter]):
         self.add_event_handler(ConnectionLostEvent, self.player_disconnected_handler)
 
     def player_disconnected_handler(self, event: ConnectionLostEvent):
-        get_event_loop().create_task(self.broadcast(MessageEvent(pid=event.pid, text=f"Player {event.pid} left")))
+        get_event_loop().create_task(
+            self.broadcast(MessageEvent(pid=event.pid, text=f"Player {event.pid} left")), name="broadcast_player_left"
+        )
         return False
 
     async def send(self, client: StreamWriter, event: Event):
@@ -57,8 +59,8 @@ class AsyncServer(HostPortMixin, BufferingHanapyServer[StreamWriter]):
                     event = loads(Event, data)
                 await self.receive_event(event)
 
-        listen_for_events.__name__ = f"listen_for_events{pid}]"
-        _ = asyncio.create_task(listen_for_events())
+        listen_for_events.__name__ = f"listen_for_events[{pid}]"
+        _ = asyncio.create_task(listen_for_events(), name=f"player[{pid}]_server_listener")
 
     async def run(self):
         logger.debug("[server] running server")
@@ -95,7 +97,7 @@ class AsyncClient(HostPortMixin, BufferingHanapyClient):
                     event = loads(Event, data)
                 await self.receive_event(event)
 
-        get_event_loop().create_task(listen_for_events())
+        get_event_loop().create_task(listen_for_events(), name="player_client_loop")
 
     async def connect(self):
         logger.debug("[client] creating connection")

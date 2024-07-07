@@ -60,7 +60,7 @@ class ClassifyClue(RankingConvention):
         playerpos = update.discard or update.play
         if playerpos is not None:
             cell = view.clue_type_cell
-            cell.pop_card(update.player, playerpos.pos, add_new=(update.new_card is not None))
+            cell.pop_card(update.player, playerpos.pos, add_new=update.new_card_dealed)
 
     def observe_clue(self, view: RankingConventionsView, clue: ClueResult):
         is_save = view.is_save_clue(clue)

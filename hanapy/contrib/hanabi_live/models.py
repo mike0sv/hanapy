@@ -74,6 +74,12 @@ class Spectator(HLModel):
     shadowingPlayerUsername: Optional[str] = None
 
 
+class FinishOngoingGameMessage(HLModel):
+    tableID: Optional[int] = None
+    databaseID: Optional[int] = None
+    sharedReplayLeader: Optional[str] = None
+
+
 class Options(HLModel):
     numPlayers: Optional[int] = None
     startingPlayer: Optional[int] = None
