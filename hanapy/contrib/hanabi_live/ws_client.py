@@ -1,3 +1,4 @@
+# ruff: noqa: S106
 import asyncio
 import json
 import logging
@@ -6,8 +7,14 @@ from typing import Any, Awaitable, Callable, List, Optional, Tuple, Type
 import requests.utils
 import websockets
 
-from hanapy.contrib.hanabi_live.models import CommandData, GameActionListMessage, HLModel, Options, TableMessage, \
-    GameActionMessage
+from hanapy.contrib.hanabi_live.models import (
+    CommandData,
+    GameActionListMessage,
+    GameActionMessage,
+    HLModel,
+    Options,
+    TableMessage,
+)
 from hanapy.utils.log import init_logger
 from hanapy.utils.ser import dumps, loads
 
@@ -61,7 +68,7 @@ class WsClient:
             async for message in websocket:
                 index = message.find(" ")
                 type_part = message[:index]
-                json_part = message[index + 1:]
+                json_part = message[index + 1 :]
                 json_data = json.loads(json_part)
                 await self.on_message(type_part, json_data, self.send)
 
@@ -87,7 +94,7 @@ async def on_table_list(message_type: str, data: Msg, send: Send):
     # send("setting", CommandData(name="createTableMaxPlayers"))
 
 
-async def create_table(send: Send, table_name: str):
+async def create_table(send: Send, table_name: str, password: str = ""):
     await send(
         "tableCreate",
         CommandData(
@@ -106,7 +113,7 @@ async def create_table(send: Send, table_name: str):
                 allOrNothing=False,
                 detrimentalCharacters=False,
             ),
-            password="",
+            password=password,
             maxPlayers=5,
         ),
     )
@@ -124,20 +131,21 @@ async def table_start(send: Send, table_id: int, indented_players: List[str]):
     await send("tableStart", TableStartModel(tableID=table_id, intendedPlayers=indented_players))
 
 
-async def join_table(send: Send, table_id: int):
-    await send("tableJoin", CommandData(tableID=table_id))
+async def join_table(send: Send, table_id: int, password: str = ""):
+    await send("tableJoin", CommandData(tableID=table_id, password=password))
 
 
 async def loaded(send: Send, table_id: int):
     await send("loaded", CommandData(tableID=table_id))
 
 
-async def action(send: Send, table_id: int, type: int, target: int, value: int):
-    await send("action", CommandData(tableID=table_id, type=type, target=target, value=value))
+async def action(send: Send, table_id: int, type_: int, target: int, value: int):
+    await send("action", CommandData(tableID=table_id, type=type_, target=target, value=value))
 
 
 async def on_game_action(send: Send, table_id: int, action: GameActionMessage):
     pass
+
 
 async def on_user(data: Msg, send: Send):
     table_id = data.get("tableID")
@@ -179,8 +187,7 @@ async def main():
             ("table", None, on_table),
         ]
     )
-    client = WsClient(username="kek33", password="123", address="209.38.252.70",
-                      on_message=msg_handler.on_message)  # noqa: S106
+    client = WsClient(username="kek33", password="123", address="209.38.252.70", on_message=msg_handler.on_message)
     await client.start()
 
 

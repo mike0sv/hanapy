@@ -1,3 +1,4 @@
+# ruff: noqa: S106
 import asyncio
 import contextlib
 import logging
@@ -128,7 +129,7 @@ class HLHanapyAdapter:
         if data.id == self._table_id:
             self._table_id = None
 
-    @on("warning", "game", "joined", "userLeft", "init", "connected", "gameActionList", "tableProgress")
+    @on("warning", "error", "game", "joined", "userLeft", "init", "connected", "gameActionList", "tableProgress")
     async def log(self, message_type: str, data):
         logger.info("%s %s", message_type, data)
 
@@ -154,7 +155,7 @@ class HLHanapyAdapter:
         await self.leave_all_tables()
         self._table_id = self.tables[-1].id
         async with self.wait_for_message("table", self.log):
-            await join_table(self.client.send_message, self.table_id)
+            await join_table(self.client.send_message, self.table_id, password="1")
 
     @on(StartGameEvent)
     async def on_start_game(self, _: StartGameEvent):
@@ -220,7 +221,7 @@ class HLHanapyAdapter:
     async def create_table(self, table_name: str):
         await self.leave_all_tables()
         async with self.wait_for_message("table", self.on_table_created, TableMessage):
-            await create_table(self.client.send_message, table_name)
+            await create_table(self.client.send_message, table_name, password="1")
 
     async def leave_all_tables(self):
         for t in self.tables:
@@ -422,7 +423,7 @@ async def main():
     await run_client(
         username=f"{namespace}_{name}",
         namespace=namespace,
-        password="123",  # noqa: S106
+        password="123",
         address="209.38.252.70",
         is_host=is_host == "1",
         auto_start_players=2,
